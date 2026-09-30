@@ -47,3 +47,14 @@
   `/batches` 8개. CORS는 Vercel 운영·미리보기 주소만 허용하고 그 외 origin은 차단됨을 확인
 - 남은 일(사용자): Render에서 저장소 연결 → 서비스 생성 → 받은 주소를 Vercel `NEXT_PUBLIC_API_BASE_URL`에 입력
 - 남은 문제: PDF 한글 폰트(맑은 고딕)가 Linux에 없어 Render에서 PDF 다운로드 시 한글이 깨질 수 있음, 무료 플랜 절전(첫 요청 지연)
+
+## 배포 결과 (2026-09-30)
+
+- 백엔드: `https://sales-performance-report-api.onrender.com` — `/health` 정상, 데모 배치 8개(2026-01~08), CORS는 Vercel 주소만 허용
+- 프론트: `https://sales-performance-report-agent.vercel.app` (Vercel Hobby, Root Directory `frontend`,
+  `NEXT_PUBLIC_API_BASE_URL`=위 백엔드 주소)
+- 확인(Playwright + Edge): 5개 화면 모두 데이터 표시, 로고 로드, API 호출 대상은 Render 주소뿐, 콘솔 오류 0건
+- 관찰: 첫 접속이 약 104초 걸림(Render 무료 플랜 절전 해제 + 시작 시 시드). 이후 페이지 이동은 1초 이내
+- 관찰: 운영 주소는 로그인 없이 열림(데모 데이터만 있으므로 허용, 실데이터는 올리지 않음)
+- 관찰: Vercel 배포 완료 화면의 미리보기 이미지에 한글이 비어 보임 — Vercel 캡처 서버에 한글 폰트가 없어서이며,
+  실제 브라우저에서는 정상 표시됨(웹폰트를 넣으면 해소 가능)
