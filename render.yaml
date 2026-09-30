@@ -1,0 +1,19 @@
+# Render 무료 웹 서비스 — 데모용 백엔드(가상 데이터 전용). .docs/phase/phase_26_백엔드외부배포.md 참고.
+# 무료 플랜은 재시작 시 디스크가 초기화되므로 시작할 때마다 시드 스크립트가 데모 데이터를 다시 채운다.
+services:
+  - type: web
+    name: sales-performance-report-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m scripts.seed_demo && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: APP_DB_PATH
+        value: /tmp/demo.duckdb
+      # Vercel 운영 주소와 미리보기 주소(sales-performance-report-agent-xxxx.vercel.app)를 모두 허용
+      - key: CORS_ALLOW_ORIGIN_REGEX
+        value: ^https://sales-performance-report-agent[a-z0-9-]*\.vercel\.app$

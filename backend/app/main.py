@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import traceback
 
 from fastapi import FastAPI, Request
@@ -56,12 +57,28 @@ async def serialize_db_access(request: Request, call_next):
         return await call_next(request)
 
 
+DEFAULT_CORS_ORIGINS = ["http://localhost:3000", "http://localhost:3100"]
+
+
+def cors_settings() -> tuple[list[str], str | None]:
+    """허용 origin 목록과 정규식. 외부 배포 시 환경변수로 Vercel 주소 등을 추가한다.
+
+    CORS_ALLOW_ORIGINS: 쉼표로 구분한 정확한 origin 목록
+    CORS_ALLOW_ORIGIN_REGEX: Vercel 미리보기처럼 배포마다 바뀌는 주소용 정규식
+    """
+    extra = [o.strip().rstrip("/") for o in os.environ.get("CORS_ALLOW_ORIGINS", "").split(",") if o.strip()]
+    regex = os.environ.get("CORS_ALLOW_ORIGIN_REGEX", "").strip() or None
+    return DEFAULT_CORS_ORIGINS + extra, regex
+
+
 # CORSMiddleware는 반드시 마지막(=가장 바깥쪽)에 등록한다 — 위 두 미들웨어가 만드는
 # 응답(정상/에러 모두)이 전부 이 미들웨어를 통과해야 CORS 헤더가 붙는다.
 # MVP는 로컬에서 Next.js(3000, 포트 충돌 시 3100)와 FastAPI(8000)를 별도 프로세스로 띄워 데모한다.
+_cors_origins, _cors_regex = cors_settings()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3100"],
+    allow_origins=_cors_origins,
+    allow_origin_regex=_cors_regex,
     allow_methods=["*"],
     allow_headers=["*"],
 )

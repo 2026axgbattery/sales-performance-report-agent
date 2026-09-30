@@ -467,3 +467,19 @@
 - [X] 과거 버전 문서 백업 압축본 2개 추적 해제 + `.gitignore`.
 - [X] git 추적 파일 전체 재스캔 0건, 백엔드 216개 통과.
 - [ ] 과거 커밋 이력의 실명 제거(이력 재작성 + 강제 push) — 사용자 확인 대기.
+
+## Phase 25 — Vercel 배포 전 프론트엔드 점검 — ✅ 완료
+
+근거: 사용자 요청(배포 전 빌드·import 대소문자·환경변수·.env 커밋 점검). [.docs/phase/phase_25_Vercel배포점검.md](phase/phase_25_Vercel배포점검.md)
+
+- [X] `next build` 통과, import·자산 참조 44개 + git 파일명 42개 대소문자 일치, 환경변수 키 `NEXT_PUBLIC_API_BASE_URL` 1개, `.env` 커밋 이력 없음.
+
+## Phase 26 — 데모용 백엔드 외부 배포 (Render) — ✅ 코드 완료 (백엔드 222개 통과), 사용자 배포 대기
+
+근거: Vercel `NEXT_PUBLIC_API_BASE_URL`에 넣을 고정 https 백엔드 주소가 필요, 사용자 선택("B로 진행"). [.docs/phase/phase_26_백엔드외부배포.md](phase/phase_26_백엔드외부배포.md)
+
+- [X] `APP_DB_PATH`로 DB 경로 분리(로컬 실데이터 DB 보호), CORS 허용 주소 환경변수화.
+- [X] `scripts/seed_demo.py` — 가상 데이터 시드(1~8월, 재실행 시 건너뜀, `APP_DB_PATH` 없으면 거부).
+- [X] 루트 `render.yaml` 작성, 로컬 모의 실행으로 시드·기동·CORS 확인.
+- [ ] Render 서비스 생성 및 Vercel 환경변수 입력(사용자).
+- [ ] PDF 한글 폰트를 Linux에서도 쓸 수 있게 번들(선택).

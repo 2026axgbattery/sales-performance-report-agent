@@ -1,6 +1,7 @@
 """DuckDB 연결 및 스키마 관리 (PRD 7장 데이터 모델의 F1·F2 부분집합)."""
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import duckdb
@@ -375,5 +376,6 @@ def get_db() -> Database:
     """FastAPI Depends()에서 사용하는 기본 DB 인스턴스 (프로세스당 1개)."""
     global _default_db
     if _default_db is None:
-        _default_db = Database()
+        # 외부 데모 배포(Render 등)는 APP_DB_PATH로 별도 DB를 쓴다 — 로컬 app.duckdb(실데이터)와 분리
+        _default_db = Database(os.environ.get("APP_DB_PATH") or DEFAULT_DB_PATH)
     return _default_db
