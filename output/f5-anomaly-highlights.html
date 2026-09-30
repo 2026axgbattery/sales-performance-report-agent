@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>이상징후 하이라이트 — 영업실적·손익 분석 Agent</title>
+<style>
+  :root {
+    --sebang-dark-gray: #333F48; --sebang-gray: #A2AAAD; --sebang-light-gray: #D0D0CE;
+    --sebang-green: #0097A9; --sebang-green-600: #008090; --sebang-green-700: #006A76;
+    --sebang-orange: #EB3300; --sebang-orange-700: #A42400;
+    --gray-50: #F8F8F8; --gray-200: #DADDDE; --light-gray-50: #FBFBFB;
+    --light-gray-200: #ECECEB; --light-gray-400: #D9D9D8; --orange-50: #FDEFEB; --green-50: #EBF7F8;
+    --color-bg-base: #FFFFFF; --color-bg-surface: #FBFBFB; --color-border: var(--sebang-light-gray);
+    --color-text-primary: var(--sebang-dark-gray); --color-text-secondary: #717779; --color-text-disabled: #B5BBBD;
+    --color-brand-primary: var(--sebang-dark-gray); --color-accent-primary: var(--sebang-orange);
+    --color-accent-secondary: var(--sebang-green-700); --color-success: var(--sebang-green-600); --color-danger: var(--sebang-orange-700);
+    --font-family-base: "Pretendard", "Noto Sans KR", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
+    --radius-sm: 4px; --radius-md: 8px; --radius-lg: 16px; --radius-full: 999px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--font-family-base); background: var(--gray-50); color: var(--color-text-primary); line-height: 1.6; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; background: var(--color-bg-base); border-bottom: 1px solid var(--color-border); padding: var(--space-4) var(--space-6); }
+  .brand { display: flex; align-items: center; gap: var(--space-3); }
+  .brand-mark { width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--color-brand-primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9375rem; letter-spacing: -0.5px; }
+  .brand-title { font-weight: 700; font-size: 1.0625rem; }
+  .brand-sub { color: var(--color-text-secondary); font-size: 0.8125rem; }
+  .step-indicator { display: flex; align-items: center; gap: var(--space-2); font-size: 0.8125rem; color: var(--color-text-secondary); }
+  .step { display: flex; align-items: center; gap: 6px; text-decoration: none; color: inherit; }
+  .step-dot { width: 20px; height: 20px; border-radius: var(--radius-full); background: var(--light-gray-200); color: var(--color-text-secondary); font-size: 0.6875rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step span:last-child { display: none; white-space: nowrap; }
+  .step.done .step-dot { background: var(--sebang-green-700); color: #fff; }
+  .step.current .step-dot { background: var(--color-accent-primary); color: #fff; }
+  .step.current span:last-child { display: inline; color: var(--color-text-primary); font-weight: 600; }
+  .step:hover .step-dot { filter: brightness(0.9); }
+  .step-sep { width: 12px; height: 1px; background: var(--color-border); flex-shrink: 0; }
+  .btn { font-family: inherit; font-size: 0.9375rem; font-weight: 600; border-radius: var(--radius-md); padding: var(--space-2) var(--space-4); cursor: pointer; border: 1px solid transparent; text-decoration:none; display:inline-block; transition: filter 150ms cubic-bezier(0.4,0,0.2,1); }
+  .btn:hover { filter: brightness(0.92); }
+  .btn-secondary { background: transparent; border-color: var(--color-brand-primary); color: var(--color-brand-primary); }
+  .btn-primary { background: var(--color-accent-primary); color: #fff; }
+  .page { max-width: 960px; margin: 0 auto; padding: var(--space-6); }
+  .page-title { font-size: 1.25rem; font-weight: 700; margin: 0 0 4px; }
+  .page-sub { color: var(--color-text-secondary); font-size: 0.875rem; margin: 0 0 var(--space-5); }
+  .filter-row { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-5); }
+  .filter-chip { font-size: 0.8125rem; font-weight: 600; padding: 6px var(--space-4); border-radius: var(--radius-full); color: var(--color-text-secondary); background: var(--light-gray-50); border: 1px solid var(--color-border); cursor: pointer; }
+  .filter-chip.active { color: #fff; background: var(--color-brand-primary); border-color: var(--color-brand-primary); }
+  .sort-note { display:flex; align-items:center; justify-content:space-between; margin-bottom: var(--space-3); font-size:0.8125rem; color: var(--color-text-secondary); }
+  .list-card { background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: 0 2px 8px rgba(51,63,72,0.06); overflow: hidden; margin-bottom: var(--space-6); }
+  .anomaly-item { display: flex; align-items: flex-start; gap: var(--space-4); padding: var(--space-5); border-bottom: 1px solid var(--light-gray-200); }
+  .anomaly-item:last-child { border-bottom: none; }
+  .rank-num { flex-shrink:0; width:24px; height:24px; border-radius:var(--radius-full); background:var(--light-gray-200); color:var(--color-text-secondary); font-size:0.75rem; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:2px; }
+  .anomaly-badge { flex-shrink: 0; font-size: 0.6875rem; font-weight: 700; padding: 3px var(--space-2); border-radius: var(--radius-sm); white-space: nowrap; margin-top: 2px; }
+  .badge-danger { background: var(--orange-50); color: var(--color-danger); }
+  .badge-success { background: var(--green-50); color: var(--sebang-green-700); }
+  .anomaly-body { flex: 1; }
+  .anomaly-title { font-size: 0.9375rem; font-weight: 600; margin-bottom: 2px; }
+  .anomaly-desc { font-size: 0.8125rem; color: var(--color-text-secondary); }
+  .anomaly-criteria { font-size: 0.6875rem; color: var(--color-text-disabled); margin-top: 4px; }
+  .anomaly-impact { text-align: right; flex-shrink: 0; min-width: 100px; }
+  .impact-amount { font-weight: 700; font-size: 0.9375rem; color: var(--color-danger); }
+  .impact-amount.pos { color: var(--sebang-green-700); }
+  .impact-label { font-size: 0.6875rem; color: var(--color-text-secondary); }
+  .action-bar { display: flex; align-items: center; justify-content: space-between; margin-top: var(--space-6); padding-top: var(--space-5); border-top: 1px solid var(--color-border); }
+  .action-note { font-size: 0.8125rem; color: var(--color-text-secondary); }
+</style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">EB</div>
+      <div>
+        <div class="brand-title">영업실적·손익 분석 Agent</div>
+        <div class="brand-sub">국내영업기획팀 · 김영우 책임</div>
+      </div>
+    </div>
+    <div class="step-indicator">
+      <a class="step done" href="f1-file-upload.html" title="1. 파일 업로드"><span class="step-dot">✓</span><span>파일 업로드</span></a>
+      <span class="step-sep"></span>
+      <a class="step done" href="f2-data-mapping.html" title="2. 정제·매핑"><span class="step-dot">✓</span><span>정제·매핑</span></a>
+      <span class="step-sep"></span>
+      <a class="step done" href="f3-anomaly-detection.html" title="3. 증감률·이상징후 계산"><span class="step-dot">✓</span><span>이상징후 계산</span></a>
+      <span class="step-sep"></span>
+      <a class="step done" href="f4-overview.html" title="4. Overview"><span class="step-dot">✓</span><span>Overview</span></a>
+      <span class="step-sep"></span>
+      <a class="step current" href="f5-anomaly-highlights.html" title="5. 이상징후 하이라이트"><span class="step-dot">5</span><span>하이라이트</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f6-threshold-settings.html" title="6. 임계치 설정"><span class="step-dot">6</span><span>임계치 설정</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f7-report-draft.html" title="7. 보고서 초안 자동 생성"><span class="step-dot">7</span><span>보고서 초안</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f8-report-review.html" title="8. 보고서 초안 검토·수정"><span class="step-dot">8</span><span>검토·수정</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f9-download.html" title="9. 결과 다운로드"><span class="step-dot">9</span><span>다운로드</span></a>
+    </div>
+  </header>
+
+  <main class="page">
+
+    <h1 class="page-title">이상징후 하이라이트</h1>
+    <p class="page-sub">임계치를 초과한 39건 중 영향 금액이 큰 순서로 정렬했습니다. 가장 중요한 이슈부터 확인하세요.</p>
+
+    <div class="filter-row">
+      <span class="filter-chip active">전체 (39)</span>
+      <span class="filter-chip">흑자→적자 전환 (3)</span>
+      <span class="filter-chip">계획 대비 미달 (23)</span>
+      <span class="filter-chip">전월 대비 급락 (18)</span>
+      <span class="filter-chip">평균단가 변동 (11)</span>
+      <span class="filter-chip">전년 대비 성장 (긍정, 7)</span>
+    </div>
+
+    <div class="sort-note">
+      <span>영향 금액(절대값) 순 정렬</span>
+      <span>1–5 / 39건</span>
+    </div>
+
+    <div class="list-card">
+      <div class="anomaly-item">
+        <div class="rank-num">1</div>
+        <span class="anomaly-badge badge-danger">흑자→적자 전환</span>
+        <div class="anomaly-body">
+          <div class="anomaly-title">대구지사 · 산업용 배터리</div>
+          <div class="anomaly-desc">전월 영업이익 +0.3억 → 이번 달 -0.6억. 계획 대비 74% 달성, 전월 대비 -18.4%.</div>
+          <div class="anomaly-criteria">플래그 기준: 흑자→적자 전환 · 계획 대비 미달 · 전월 대비 급락 (3건 중복)</div>
+        </div>
+        <div class="anomaly-impact">
+          <div class="impact-amount">-0.9억</div>
+          <div class="impact-label">영향 금액</div>
+        </div>
+      </div>
+
+      <div class="anomaly-item">
+        <div class="rank-num">2</div>
+        <span class="anomaly-badge badge-danger">계획 대비 미달</span>
+        <div class="anomaly-body">
+          <div class="anomaly-title">광주지사 · 자동차용 배터리</div>
+          <div class="anomaly-desc">계획 대비 79% 달성 (기준 90% 미달). 전월 대비 -14.8%.</div>
+          <div class="anomaly-criteria">플래그 기준: 계획 대비 미달 · 전월 대비 급락</div>
+        </div>
+        <div class="anomaly-impact">
+          <div class="impact-amount">-0.7억</div>
+          <div class="impact-label">영향 금액</div>
+        </div>
+      </div>
+
+      <div class="anomaly-item">
+        <div class="rank-num">3</div>
+        <span class="anomaly-badge badge-danger">평균단가 변동</span>
+        <div class="anomaly-body">
+          <div class="anomaly-title">서울지사 · 산업용 배터리</div>
+          <div class="anomaly-desc">평균 단가 전월 대비 -6.1% 하락. 단가 인상 반영 여부 확인 필요.</div>
+          <div class="anomaly-criteria">플래그 기준: 평균단가 변동</div>
+        </div>
+        <div class="anomaly-impact">
+          <div class="impact-amount">-0.4억</div>
+          <div class="impact-label">영향 금액</div>
+        </div>
+      </div>
+
+      <div class="anomaly-item">
+        <div class="rank-num">4</div>
+        <span class="anomaly-badge badge-danger">판관비 급증</span>
+        <div class="anomaly-body">
+          <div class="anomaly-title">부산지사 · 공통비</div>
+          <div class="anomaly-desc">판관비 전월 대비 +23.5%. 특이 비용 발생 여부 담당자 확인 필요.</div>
+          <div class="anomaly-criteria">플래그 기준: 판관비 급증</div>
+        </div>
+        <div class="anomaly-impact">
+          <div class="impact-amount">-0.2억</div>
+          <div class="impact-label">영향 금액</div>
+        </div>
+      </div>
+
+      <div class="anomaly-item">
+        <div class="rank-num">5</div>
+        <span class="anomaly-badge badge-success">전년 대비 성장</span>
+        <div class="anomaly-body">
+          <div class="anomaly-title">인천지사 · 자동차용 배터리</div>
+          <div class="anomaly-desc">전년 동월 대비 +18.2% 성장. 계획 대비 96%로 양호.</div>
+          <div class="anomaly-criteria">플래그 기준: 전년 대비 성장 (긍정 신호)</div>
+        </div>
+        <div class="anomaly-impact">
+          <div class="impact-amount pos">+0.5억</div>
+          <div class="impact-label">영향 금액</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-bar">
+      <span class="action-note">더 보기 (34건 남음)</span>
+      <a href="f6-threshold-settings.html" class="btn btn-primary">필요 시 임계치 조정 후 보고서 초안 생성 →</a>
+    </div>
+
+  </main>
+
+</body>
+</html>

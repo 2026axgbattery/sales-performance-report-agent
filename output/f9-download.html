@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>결과 다운로드 — 영업실적·손익 분석 Agent</title>
+<style>
+  :root {
+    --sebang-dark-gray: #333F48; --sebang-gray: #A2AAAD; --sebang-light-gray: #D0D0CE;
+    --sebang-green: #0097A9; --sebang-green-600: #008090; --sebang-green-700: #006A76;
+    --sebang-orange: #EB3300; --sebang-orange-700: #A42400;
+    --gray-50: #F8F8F8; --gray-200: #DADDDE; --light-gray-50: #FBFBFB;
+    --light-gray-200: #ECECEB; --light-gray-400: #D9D9D8; --orange-50: #FDEFEB; --green-50: #EBF7F8;
+    --color-bg-base: #FFFFFF; --color-bg-surface: #FBFBFB; --color-border: var(--sebang-light-gray);
+    --color-text-primary: var(--sebang-dark-gray); --color-text-secondary: #717779; --color-text-disabled: #B5BBBD;
+    --color-brand-primary: var(--sebang-dark-gray); --color-accent-primary: var(--sebang-orange);
+    --color-accent-secondary: var(--sebang-green-700); --color-success: var(--sebang-green-600); --color-danger: var(--sebang-orange-700);
+    --font-family-base: "Pretendard", "Noto Sans KR", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
+    --radius-sm: 4px; --radius-md: 8px; --radius-lg: 16px; --radius-full: 999px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--font-family-base); background: var(--gray-50); color: var(--color-text-primary); line-height: 1.6; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; background: var(--color-bg-base); border-bottom: 1px solid var(--color-border); padding: var(--space-4) var(--space-6); }
+  .brand { display: flex; align-items: center; gap: var(--space-3); }
+  .brand-mark { width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--color-brand-primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9375rem; letter-spacing: -0.5px; }
+  .brand-title { font-weight: 700; font-size: 1.0625rem; }
+  .brand-sub { color: var(--color-text-secondary); font-size: 0.8125rem; }
+  .step-indicator { display: flex; align-items: center; gap: var(--space-2); font-size: 0.8125rem; color: var(--color-text-secondary); }
+  .step { display: flex; align-items: center; gap: 6px; text-decoration: none; color: inherit; }
+  .step-dot { width: 20px; height: 20px; border-radius: var(--radius-full); background: var(--light-gray-200); color: var(--color-text-secondary); font-size: 0.6875rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step span:last-child { display: none; white-space: nowrap; }
+  .step.done .step-dot { background: var(--sebang-green-700); color: #fff; }
+  .step.current .step-dot { background: var(--color-accent-primary); color: #fff; }
+  .step.current span:last-child { display: inline; color: var(--color-text-primary); font-weight: 600; }
+  .step:hover .step-dot { filter: brightness(0.9); }
+  .step-sep { width: 12px; height: 1px; background: var(--color-border); flex-shrink: 0; }
+  .btn { font-family: inherit; font-size: 0.9375rem; font-weight: 600; border-radius: var(--radius-md); padding: var(--space-2) var(--space-4); cursor: pointer; border: 1px solid transparent; text-decoration:none; display:inline-block; transition: filter 150ms cubic-bezier(0.4,0,0.2,1); }
+  .btn:hover { filter: brightness(0.92); }
+  .btn-secondary { background: transparent; border-color: var(--color-brand-primary); color: var(--color-brand-primary); }
+  .btn-primary { background: var(--color-accent-primary); color: #fff; }
+  .btn-sm { font-size: 0.8125rem; font-weight: 600; padding: 6px var(--space-4); border-radius: var(--radius-md); cursor: pointer; background: var(--sebang-dark-gray); color: #fff; border: none; }
+  .page { max-width: 800px; margin: 0 auto; padding: var(--space-6); }
+  .page-title { font-size: 1.25rem; font-weight: 700; margin: 0 0 4px; }
+  .page-sub { color: var(--color-text-secondary); font-size: 0.875rem; margin: 0 0 var(--space-6); }
+  .success-banner {
+    display: flex; align-items: center; gap: var(--space-3);
+    background: var(--green-50); border: 1px solid #99D5DD; color: var(--sebang-green-700);
+    border-radius: var(--radius-sm); padding: var(--space-4); font-size: 0.875rem; margin-bottom: var(--space-6);
+  }
+  .success-icon {
+    width: 28px; height: 28px; border-radius: 50%; background: var(--sebang-green-700); color: #fff;
+    display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;
+  }
+  .file-card {
+    display: flex; align-items: center; gap: var(--space-4);
+    background: var(--color-bg-surface); border: 1px solid var(--color-border);
+    border-radius: var(--radius-md); box-shadow: 0 2px 8px rgba(51,63,72,0.06);
+    padding: var(--space-4) var(--space-5); margin-bottom: var(--space-4);
+  }
+  .file-icon {
+    width: 40px; height: 40px; border-radius: var(--radius-sm); background: var(--green-50); color: var(--sebang-green-700);
+    display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;
+  }
+  .file-info { flex: 1; }
+  .file-name { font-size: 0.9375rem; font-weight: 600; }
+  .file-desc { font-size: 0.8125rem; color: var(--color-text-secondary); margin-top: 2px; }
+  .distribution-card {
+    background: var(--light-gray-50); border: 1px solid var(--color-border);
+    border-radius: var(--radius-md); padding: var(--space-5); margin-top: var(--space-6);
+  }
+  .distribution-title { font-size: 0.9375rem; font-weight: 700; margin-bottom: var(--space-3); }
+  .distribution-list { display: flex; flex-direction: column; gap: var(--space-3); }
+  .distribution-item { display: flex; align-items: center; gap: var(--space-3); font-size: 0.8125rem; color: var(--color-text-secondary); }
+  .distribution-num {
+    width: 20px; height: 20px; border-radius: var(--radius-full); background: var(--light-gray-200); color: var(--color-text-secondary);
+    font-size: 0.6875rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .action-bar { display: flex; align-items: center; justify-content: space-between; margin-top: var(--space-6); padding-top: var(--space-5); border-top: 1px solid var(--color-border); }
+  .action-note { font-size: 0.8125rem; color: var(--color-text-secondary); }
+</style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">EB</div>
+      <div>
+        <div class="brand-title">영업실적·손익 분석 Agent</div>
+        <div class="brand-sub">국내영업기획팀 · 김영우 책임</div>
+      </div>
+    </div>
+    <div class="step-indicator">
+      <a class="step done" href="f1-file-upload.html" title="1. 파일 업로드"><span class="step-dot">✓</span><span>파일 업로드</span></a>
+      <span class="step-sep"></span>
+      <a class="step done" href="f2-data-mapping.html" title="2. 정제·매핑"><span class="step-dot">✓</span><span>정제·매핑</span></a>
+      <span class="step-sep"></span>
+      <a class="step done" href="f3-anomaly-detection.html" title="3. 증감률·이상징후 계산"><span class="step-dot">✓</span><span>이상징후 계산</span></a>
+      <span class="step-sep"></span>
+      <a class="step done" href="f4-overview.html" title="4. Overview"><span class="step-dot">✓</span><span>Overview</span></a>
+      <span class="step-sep"></span>
+      <a class="step done" href="f5-anomaly-highlights.html" title="5. 이상징후 하이라이트"><span class="step-dot">✓</span><span>하이라이트</span></a>
+      <span class="step-sep"></span>
+      <a class="step done" href="f6-threshold-settings.html" title="6. 임계치 설정"><span class="step-dot">✓</span><span>임계치 설정</span></a>
+      <span class="step-sep"></span>
+      <a class="step done" href="f7-report-draft.html" title="7. 보고서 초안 자동 생성"><span class="step-dot">✓</span><span>보고서 초안</span></a>
+      <span class="step-sep"></span>
+      <a class="step done" href="f8-report-review.html" title="8. 보고서 초안 검토·수정"><span class="step-dot">✓</span><span>검토·수정</span></a>
+      <span class="step-sep"></span>
+      <a class="step current" href="f9-download.html" title="9. 결과 다운로드"><span class="step-dot">9</span><span>다운로드</span></a>
+    </div>
+  </header>
+
+  <main class="page">
+
+    <h1 class="page-title">결과 다운로드</h1>
+    <p class="page-sub">검토가 끝난 결과를 기존 배포 경로에 그대로 첨부할 수 있는 엑셀 파일로 내려받으세요.</p>
+
+    <div class="success-banner">
+      <div class="success-icon">✓</div>
+      <span>보고서 초안 검토가 완료되었습니다 (37건 포함 · 2건 제외). 아래에서 원하는 결과물을 다운로드하세요.</span>
+    </div>
+
+    <div class="file-card">
+      <div class="file-icon">XLS</div>
+      <div class="file-info">
+        <div class="file-name">2026년_08월_전체실적_Overview.xlsx</div>
+        <div class="file-desc">전체 매출·영업이익 합계, 증감률, 지사/영업팀 순위, 계획 대비 달성률</div>
+      </div>
+      <button class="btn-sm">다운로드</button>
+    </div>
+
+    <div class="file-card">
+      <div class="file-icon">XLS</div>
+      <div class="file-info">
+        <div class="file-name">2026년_08월_이상징후_리스트.xlsx</div>
+        <div class="file-desc">임계치 초과 39건, 영향 금액 순 정렬, 판단 기준 포함</div>
+      </div>
+      <button class="btn-sm">다운로드</button>
+    </div>
+
+    <div class="file-card">
+      <div class="file-icon">XLS</div>
+      <div class="file-info">
+        <div class="file-name">2026년_08월_상세보고서_최종.xlsx</div>
+        <div class="file-desc">그래프·코멘트·담당자 배경 설명 포함, 검토 완료본 (37건)</div>
+      </div>
+      <button class="btn-sm">다운로드</button>
+    </div>
+
+    <div class="distribution-card">
+      <div class="distribution-title">배포 안내</div>
+      <div class="distribution-list">
+        <div class="distribution-item"><span class="distribution-num">1</span> 관련 영업팀에 공유</div>
+        <div class="distribution-item"><span class="distribution-num">2</span> 월례 회의체 발표</div>
+        <div class="distribution-item"><span class="distribution-num">3</span> 경영진·임원 메일 보고</div>
+      </div>
+    </div>
+
+    <div class="action-bar">
+      <span class="action-note">이번 달 분석이 완료되었습니다.</span>
+      <a href="f1-file-upload.html" class="btn btn-primary">다음 달 새 분석 시작하기 →</a>
+    </div>
+
+  </main>
+
+</body>
+</html>

@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>전체 실적 Overview — 영업실적·손익 분석 Agent</title>
+<style>
+  :root {
+    --sebang-dark-gray: #333F48; --sebang-gray: #A2AAAD; --sebang-light-gray: #D0D0CE;
+    --sebang-green: #0097A9; --sebang-green-600: #008090; --sebang-green-700: #006A76;
+    --sebang-orange: #EB3300; --sebang-orange-700: #A42400;
+    --gray-50: #F8F8F8; --gray-200: #DADDDE; --light-gray-50: #FBFBFB;
+    --light-gray-200: #ECECEB; --light-gray-400: #D9D9D8; --orange-50: #FDEFEB; --green-50: #EBF7F8;
+    --color-bg-base: #FFFFFF; --color-bg-surface: #FBFBFB; --color-border: var(--sebang-light-gray);
+    --color-text-primary: var(--sebang-dark-gray); --color-text-secondary: #717779; --color-text-disabled: #B5BBBD;
+    --color-brand-primary: var(--sebang-dark-gray); --color-accent-primary: var(--sebang-orange);
+    --color-accent-secondary: var(--sebang-green-700); --color-success: var(--sebang-green-600); --color-danger: var(--sebang-orange-700);
+    --font-family-base: "Pretendard", "Noto Sans KR", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
+    --radius-sm: 4px; --radius-md: 8px; --radius-lg: 16px; --radius-full: 999px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--font-family-base); background: var(--gray-50); color: var(--color-text-primary); line-height: 1.6; }
+
+  /* ── Top bar ───────────────────────────────────────────── */
+  .topbar { background: var(--color-bg-base); border-bottom: 1px solid var(--color-border); padding: var(--space-4) var(--space-6); }
+  .topbar-main { display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: var(--space-3); }
+  .brand-mark { width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--color-brand-primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9375rem; letter-spacing: -0.5px; }
+  .brand-title { font-weight: 700; font-size: 1.0625rem; }
+  .brand-sub { color: var(--color-text-secondary); font-size: 0.8125rem; }
+  .topbar-actions { display: flex; align-items: center; gap: var(--space-3); }
+  .period-chip { font-size: 0.8125rem; color: var(--color-text-secondary); background: var(--light-gray-50); border: 1px solid var(--color-border); border-radius: var(--radius-full); padding: var(--space-1) var(--space-4); }
+  .btn { font-family: inherit; font-size: 0.9375rem; font-weight: 600; border-radius: var(--radius-md); padding: var(--space-2) var(--space-4); cursor: pointer; border: 1px solid transparent; text-decoration: none; display: inline-block; transition: filter 150ms cubic-bezier(0.4,0,0.2,1); }
+  .btn:hover { filter: brightness(0.92); }
+  .btn-secondary { background: transparent; border-color: var(--color-brand-primary); color: var(--color-brand-primary); }
+  .btn-primary { background: var(--color-accent-primary); color: #fff; }
+
+  .step-indicator { display: flex; align-items: center; gap: var(--space-2); font-size: 0.8125rem; color: var(--color-text-secondary); margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--light-gray-200); }
+  .step { display: flex; align-items: center; gap: 6px; text-decoration: none; color: inherit; }
+  .step-dot { width: 20px; height: 20px; border-radius: var(--radius-full); background: var(--light-gray-200); color: var(--color-text-secondary); font-size: 0.6875rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step span:last-child { display: none; white-space: nowrap; }
+  .step.done .step-dot { background: var(--sebang-green-700); color: #fff; }
+  .step.current .step-dot { background: var(--color-accent-primary); color: #fff; }
+  .step.current span:last-child { display: inline; color: var(--color-text-primary); font-weight: 600; }
+  .step:hover .step-dot { filter: brightness(0.9); }
+  .step-sep { width: 12px; height: 1px; background: var(--color-border); flex-shrink: 0; }
+
+  /* ── Page shell: sidebar + content ────────────────────────── */
+  .page-shell { max-width: 1360px; margin: 0 auto; padding: var(--space-6); display: flex; gap: var(--space-6); align-items: flex-start; }
+
+  .sidebar { width: 216px; flex-shrink: 0; position: sticky; top: var(--space-6); }
+  .sidebar-title { font-size: 0.75rem; font-weight: 700; color: var(--color-text-disabled); text-transform: uppercase; letter-spacing: 0.04em; padding: 0 var(--space-3); margin-bottom: var(--space-2); }
+  .nav-list { display: flex; flex-direction: column; gap: 2px; }
+  .nav-item { text-align: left; background: transparent; border: none; padding: 10px var(--space-3); border-radius: var(--radius-sm); font-size: 0.8125rem; font-weight: 600; color: var(--color-text-secondary); cursor: pointer; font-family: inherit; line-height: 1.4; }
+  .nav-item:hover { background: var(--light-gray-50); color: var(--color-text-primary); }
+  .nav-item.active { background: var(--sebang-dark-gray); color: #fff; }
+
+  .content { flex: 1; min-width: 0; }
+  .content-panel { display: none; }
+  .content-panel.active { display: block; }
+
+  .panel-title { font-size: 1.25rem; font-weight: 700; margin: 0 0 4px; }
+  .panel-sub { color: var(--color-text-secondary); font-size: 0.875rem; margin: 0 0 var(--space-5); }
+
+  .card { background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: 0 2px 8px rgba(51,63,72,0.06); padding: var(--space-5); margin-bottom: var(--space-5); }
+
+  /* ── KPI cards (요약 패널) ─────────────────────────────── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); margin-bottom: var(--space-6); }
+  .kpi-card { background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: 0 2px 8px rgba(51,63,72,0.06); padding: var(--space-5); }
+  .kpi-label { font-size: 0.8125rem; color: var(--color-text-secondary); margin-bottom: var(--space-2); }
+  .kpi-value { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.5px; }
+  .kpi-delta { margin-top: var(--space-2); font-size: 0.8125rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+  .delta-up { color: var(--color-success); } .delta-down { color: var(--color-danger); }
+
+  .grid-2 { display: grid; grid-template-columns: 1.1fr 1.4fr; gap: var(--space-5); align-items: start; }
+  .rank-row { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--light-gray-200); }
+  .rank-row:last-child { border-bottom: none; }
+  .rank-badge { width: 24px; height: 24px; border-radius: var(--radius-full); background: var(--light-gray-200); color: var(--color-text-secondary); font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .rank-name { flex: 1; font-size: 0.9375rem; font-weight: 500; }
+  .rank-sub { color: var(--color-text-secondary); font-size: 0.75rem; }
+  .rank-value { font-weight: 700; font-size: 0.9375rem; text-align: right; min-width: 90px; }
+
+  .anomaly-item { display: flex; align-items: flex-start; gap: var(--space-4); padding: var(--space-4) 0; border-bottom: 1px solid var(--light-gray-200); }
+  .anomaly-item:last-child { border-bottom: none; }
+  .anomaly-badge { flex-shrink: 0; font-size: 0.6875rem; font-weight: 700; padding: 3px var(--space-2); border-radius: var(--radius-sm); white-space: nowrap; margin-top: 2px; }
+  .badge-danger { background: var(--orange-50); color: var(--color-danger); }
+  .badge-success { background: var(--green-50); color: var(--sebang-green-700); }
+  .anomaly-title { font-size: 0.9375rem; font-weight: 600; margin-bottom: 2px; }
+  .anomaly-desc { font-size: 0.8125rem; color: var(--color-text-secondary); }
+  .anomaly-impact { text-align: right; flex-shrink: 0; min-width: 100px; }
+  .impact-amount { font-weight: 700; font-size: 0.9375rem; color: var(--color-danger); }
+  .impact-label { font-size: 0.6875rem; color: var(--color-text-secondary); }
+
+  /* ── Sub tabs (팀/그룹 선택, 섹션 내부) ───────────────────── */
+  .subtab-row { display: flex; gap: var(--space-2); margin-bottom: var(--space-4); flex-wrap: wrap; }
+  .subtab { font-size: 0.8125rem; font-weight: 600; padding: 6px var(--space-4); border-radius: var(--radius-full); background: var(--light-gray-50); border: 1px solid var(--color-border); color: var(--color-text-secondary); cursor: pointer; font-family: inherit; }
+  .subtab.active { background: var(--sebang-dark-gray); color: #fff; border-color: var(--sebang-dark-gray); }
+  .sub-panel { display: none; }
+  .sub-panel.active { display: block; }
+
+  /* ── Generic data table ───────────────────────────────────── */
+  .table-scroll { overflow-x: auto; }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; min-width: 640px; }
+  table.data-table thead th { text-align: right; color: var(--color-text-secondary); font-weight: 600; padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--color-border); white-space: nowrap; }
+  table.data-table thead th:first-child { text-align: left; }
+  table.data-table thead tr.group-head th { background: var(--sebang-green-700); color: #fff; text-align: center; border-bottom: 1px solid var(--sebang-green-700); }
+  table.data-table thead tr.group-head th.blank { background: transparent; }
+  table.data-table tbody td { padding: var(--space-3); border-bottom: 1px solid var(--light-gray-200); text-align: right; vertical-align: middle; }
+  table.data-table tbody td:first-child { text-align: left; font-weight: 600; }
+  table.data-table tbody tr:last-child td { border-bottom: none; }
+  table.data-table tbody tr.total-row td { font-weight: 700; background: #FFF6CC; }
+  table.data-table tbody tr.group-summary td { font-weight: 700; background: var(--green-50); }
+  .cell-muted { color: var(--color-text-disabled); font-weight: 400 !important; }
+  .col-group-start { border-left: 1px solid var(--color-border); }
+  .val-up { color: var(--sebang-green-700); } .val-down { color: var(--color-danger); }
+
+  .section-note { font-size: 0.75rem; color: var(--color-text-secondary); background: var(--light-gray-50); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-4); }
+
+  .footer-note { margin-top: var(--space-6); font-size: 0.75rem; color: var(--color-text-secondary); text-align: center; }
+</style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar-main">
+      <div class="brand">
+        <div class="brand-mark">EB</div>
+        <div>
+          <div class="brand-title">영업실적·손익 분석 Agent</div>
+          <div class="brand-sub">국내영업기획팀 · 김영우 책임</div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <span class="period-chip">2026년 6월 실적 · 마감 기준</span>
+        <a href="f6-threshold-settings.html" class="btn btn-secondary">임계치 설정</a>
+        <a href="f5-anomaly-highlights.html" class="btn btn-primary">이상징후 하이라이트 →</a>
+      </div>
+    </div>
+    <div class="step-indicator">
+      <a class="step done" href="f1-file-upload.html" title="1. 파일 업로드"><span class="step-dot">✓</span><span>파일 업로드</span></a>
+      <span class="step-sep"></span>
+      <a class="step done" href="f2-data-mapping.html" title="2. 정제·매핑"><span class="step-dot">✓</span><span>정제·매핑</span></a>
+      <span class="step-sep"></span>
+      <a class="step done" href="f3-anomaly-detection.html" title="3. 증감률·이상징후 계산"><span class="step-dot">✓</span><span>이상징후 계산</span></a>
+      <span class="step-sep"></span>
+      <a class="step current" href="f4-overview.html" title="4. Overview"><span class="step-dot">4</span><span>Overview</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f5-anomaly-highlights.html" title="5. 이상징후 하이라이트"><span class="step-dot">5</span><span>하이라이트</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f6-threshold-settings.html" title="6. 임계치 설정"><span class="step-dot">6</span><span>임계치 설정</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f7-report-draft.html" title="7. 보고서 초안 자동 생성"><span class="step-dot">7</span><span>보고서 초안</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f8-report-review.html" title="8. 보고서 초안 검토·수정"><span class="step-dot">8</span><span>검토·수정</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f9-download.html" title="9. 결과 다운로드"><span class="step-dot">9</span><span>다운로드</span></a>
+    </div>
+  </header>
+
+  <div class="page-shell">
+
+    <!-- ── 좌측 섹션 탭 ─────────────────────────────────────── -->
+    <nav class="sidebar">
+      <div class="sidebar-title">Overview 섹션</div>
+      <div class="nav-list" id="nav-list">
+        <button class="nav-item active" data-panel="panel-summary">요약</button>
+        <button class="nav-item" data-panel="panel-1">① 목표대비 (수량·매출)</button>
+        <button class="nav-item" data-panel="panel-2">② 목표대비 (영업이익)</button>
+        <button class="nav-item" data-panel="panel-3">③ 전년 동월 대비</button>
+        <button class="nav-item" data-panel="panel-4">④ 전년 누계 대비</button>
+        <button class="nav-item" data-panel="panel-5">⑤ 전월 대비</button>
+        <button class="nav-item" data-panel="panel-6">⑥ 월별분석 (팀별)</button>
+        <button class="nav-item" data-panel="panel-7">⑦ 월별분석 (제품군별)</button>
+        <button class="nav-item" data-panel="panel-8">⑧ 팀×거래처별 상세</button>
+      </div>
+    </nav>
+
+    <!-- ── 콘텐츠 ───────────────────────────────────────────── -->
+    <main class="content">
+
+      <!-- 요약 -->
+      <section class="content-panel active" id="panel-summary">
+        <h1 class="panel-title">전체 실적 Overview</h1>
+        <p class="panel-sub">업로드 즉시 자동 집계된 결과입니다 · 최종 업데이트 2026-07-01 09:14</p>
+
+        <section class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">전체 매출 (당월)</div>
+            <div class="kpi-value">47.9억</div>
+            <span class="kpi-delta delta-down">▼ 전월 대비 -3.1%</span>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">영업이익 (당월)</div>
+            <div class="kpi-value">3.15억</div>
+            <span class="kpi-delta delta-down">▼ 전월 대비 -18.2%</span>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">전년 동월 대비</div>
+            <div class="kpi-value">+5.8%</div>
+            <span class="kpi-delta delta-up">▲ 매출 기준 성장 유지</span>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">당월 목표 달성률</div>
+            <div class="kpi-value">97.4%</div>
+            <span class="kpi-delta delta-down">▼ 목표 소폭 미달</span>
+          </div>
+        </section>
+
+        <div class="grid-2">
+          <section class="card">
+            <h2 class="panel-title" style="font-size:1.0625rem; margin-bottom: var(--space-4);">팀별 순위 (당월 매출)</h2>
+            <div class="rank-row"><div class="rank-badge">1</div><div><div class="rank-name">차량대리점</div><div class="rank-sub">목표 대비 107.7%</div></div><div class="rank-value delta-up">18.2억</div></div>
+            <div class="rank-row"><div class="rank-badge">2</div><div><div class="rank-name">차량OE</div><div class="rank-sub">목표 대비 91.8%</div></div><div class="rank-value">14.5억</div></div>
+            <div class="rank-row"><div class="rank-badge">3</div><div><div class="rank-name">산전팀</div><div class="rank-sub">목표 대비 106.3%</div></div><div class="rank-value delta-up">5.1억</div></div>
+            <div class="rank-row"><div class="rank-badge">4</div><div><div class="rank-name">모티브</div><div class="rank-sub">목표 대비 95.5%</div></div><div class="rank-value">6.4억</div></div>
+            <div class="rank-row"><div class="rank-badge" style="background:var(--orange-50);color:var(--color-danger);">↓</div><div><div class="rank-name">고정형</div><div class="rank-sub">목표 대비 74.0% · 최하위</div></div><div class="rank-value delta-down">3.7억</div></div>
+          </section>
+
+          <section class="card">
+            <h2 class="panel-title" style="font-size:1.0625rem;">이상징후 하이라이트</h2>
+            <p class="panel-sub" style="margin-bottom: var(--space-3);">영향 금액 순 정렬 · 임계치 기준 자동 탐지</p>
+            <div class="anomaly-item">
+              <span class="anomaly-badge badge-danger">흑자→적자 전환</span>
+              <div style="flex:1;"><div class="anomaly-title">고정형 팀</div><div class="anomaly-desc">전월 영업이익 +0.15억 → 이번 달 -0.6억. 목표 대비 74.0% 달성.</div></div>
+              <div class="anomaly-impact"><div class="impact-amount">-0.75억</div><div class="impact-label">영향 금액</div></div>
+            </div>
+            <div class="anomaly-item">
+              <span class="anomaly-badge badge-danger">목표 대비 미달</span>
+              <div style="flex:1;"><div class="anomaly-title">차량OE 팀</div><div class="anomaly-desc">목표 대비 91.8% 달성. 전년 동월 대비 -3.1%.</div></div>
+              <div class="anomaly-impact"><div class="impact-amount">-0.7억</div><div class="impact-label">영향 금액</div></div>
+            </div>
+            <div class="anomaly-item">
+              <span class="anomaly-badge badge-success">전년 대비 성장</span>
+              <div style="flex:1;"><div class="anomaly-title">산전팀</div><div class="anomaly-desc">전년 동월 대비 +12.4% 성장. 목표 대비 106.3%로 양호.</div></div>
+              <div class="anomaly-impact"><div class="impact-amount" style="color:var(--sebang-green-700);">+0.4억</div><div class="impact-label">영향 금액</div></div>
+            </div>
+            <div style="text-align:right; margin-top: var(--space-4);">
+              <a href="f5-anomaly-highlights.html" style="font-size:0.8125rem; font-weight:600; color: var(--color-accent-secondary); text-decoration:none;">전체 보기 →</a>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <!-- ① 팀별 목표 대비 실적 (수량·매출) -->
+      <section class="content-panel" id="panel-1">
+        <h1 class="panel-title">① 팀별 목표 대비 실적 (수량·매출)</h1>
+        <p class="panel-sub">2026년 6월(당월) / 2026년 누계</p>
+        <div class="card">
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr class="group-head">
+                  <th class="blank"></th>
+                  <th colspan="6">2026년 6월</th>
+                  <th colspan="6">2026년 누계</th>
+                </tr>
+                <tr>
+                  <th>팀</th>
+                  <th class="col-group-start">목표 수량</th><th>목표 매출액</th>
+                  <th>실적 수량</th><th>실적 매출액</th>
+                  <th>대비 수량(%)</th><th>대비 매출액(%)</th>
+                  <th class="col-group-start">목표 수량</th><th>목표 매출액</th>
+                  <th>실적 수량</th><th>실적 매출액</th>
+                  <th>대비 수량(%)</th><th>대비 매출액(%)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>고정형</td><td class="col-group-start cell-muted">2,800</td><td class="cell-muted">5.0억</td><td>2,100</td><td>3.7억</td><td class="val-down col-group-start">75.0%</td><td class="val-down">74.0%</td><td class="col-group-start cell-muted">17,500</td><td class="cell-muted">30.0억</td><td>14,900</td><td>25.0억</td><td class="val-down col-group-start">85.1%</td><td class="val-down">83.3%</td></tr>
+                <tr><td>모티브</td><td class="col-group-start cell-muted">4,400</td><td class="cell-muted">6.7억</td><td>4,200</td><td>6.4억</td><td class="col-group-start">95.5%</td><td>95.5%</td><td class="col-group-start cell-muted">26,800</td><td class="cell-muted">40.0억</td><td>25,900</td><td>39.0억</td><td class="col-group-start">96.6%</td><td>97.5%</td></tr>
+                <tr><td>산전팀</td><td class="col-group-start cell-muted">3,200</td><td class="cell-muted">4.8억</td><td>3,050</td><td>5.1억</td><td class="val-up col-group-start">95.3%</td><td class="val-up">106.3%</td><td class="col-group-start cell-muted">18,600</td><td class="cell-muted">29.0억</td><td>19,400</td><td>30.5억</td><td class="val-up col-group-start">104.3%</td><td class="val-up">105.2%</td></tr>
+                <tr><td>차량대리점</td><td class="col-group-start cell-muted">11,400</td><td class="cell-muted">16.9억</td><td>12,400</td><td>18.2억</td><td class="val-up col-group-start">108.8%</td><td class="val-up">107.7%</td><td class="col-group-start cell-muted">65,300</td><td class="cell-muted">68.0억</td><td>67,800</td><td>70.5억</td><td class="val-up col-group-start">103.8%</td><td class="val-up">103.7%</td></tr>
+                <tr><td>차량OE</td><td class="col-group-start cell-muted">10,600</td><td class="cell-muted">15.8억</td><td>9,800</td><td>14.5억</td><td class="val-down col-group-start">92.5%</td><td class="val-down">91.8%</td><td class="col-group-start cell-muted">63,200</td><td class="cell-muted">95.0억</td><td>58,400</td><td>88.0억</td><td class="val-down col-group-start">92.4%</td><td class="val-down">92.6%</td></tr>
+                <tr class="total-row"><td>합계</td><td class="col-group-start">32,400</td><td>49.2억</td><td>31,550</td><td>47.9억</td><td class="col-group-start">97.4%</td><td>97.4%</td><td class="col-group-start">191,400</td><td>262.0억</td><td>186,400</td><td>253.0억</td><td class="col-group-start">97.4%</td><td>96.6%</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ② 팀별 목표 대비 실적 (영업이익) -->
+      <section class="content-panel" id="panel-2">
+        <h1 class="panel-title">② 팀별 목표 대비 실적 (영업이익)</h1>
+        <p class="panel-sub">2026년 6월(당월) / 2026년 누계</p>
+        <div class="card">
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr class="group-head">
+                  <th class="blank"></th>
+                  <th colspan="6">2026년 6월</th>
+                  <th colspan="6">2026년 누계</th>
+                </tr>
+                <tr>
+                  <th>팀</th>
+                  <th class="col-group-start">목표 금액</th><th>목표 이익율</th>
+                  <th>실적 금액</th><th>실적 이익율</th>
+                  <th>대비 금액(%)</th><th>대비 이익율(%p)</th>
+                  <th class="col-group-start">목표 금액</th><th>목표 이익율</th>
+                  <th>실적 금액</th><th>실적 이익율</th>
+                  <th>대비 금액(%)</th><th>대비 이익율(%p)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>고정형</td><td class="col-group-start cell-muted">0.15억</td><td class="cell-muted">3.0%</td><td class="val-down">-0.60억</td><td class="val-down">-16.2%</td><td class="val-down col-group-start">-400%</td><td class="val-down">-19.2%p</td><td class="col-group-start cell-muted">0.90억</td><td class="cell-muted">3.0%</td><td class="val-down">-0.30억</td><td class="val-down">-1.2%</td><td class="val-down col-group-start">-133%</td><td class="val-down">-4.2%p</td></tr>
+                <tr><td>모티브</td><td class="col-group-start cell-muted">0.55억</td><td class="cell-muted">8.2%</td><td>0.50억</td><td>7.8%</td><td class="col-group-start">90.9%</td><td class="val-down">-0.4%p</td><td class="col-group-start cell-muted">3.20억</td><td class="cell-muted">8.0%</td><td>3.00억</td><td>7.7%</td><td class="col-group-start">93.8%</td><td class="val-down">-0.3%p</td></tr>
+                <tr><td>산전팀</td><td class="col-group-start cell-muted">0.40억</td><td class="cell-muted">8.3%</td><td class="val-up">0.55억</td><td class="val-up">10.8%</td><td class="val-up col-group-start">137.5%</td><td class="val-up">+2.5%p</td><td class="col-group-start cell-muted">2.40억</td><td class="cell-muted">8.3%</td><td class="val-up">2.70억</td><td class="val-up">8.9%</td><td class="val-up col-group-start">112.5%</td><td class="val-up">+0.6%p</td></tr>
+                <tr><td>차량대리점</td><td class="col-group-start cell-muted">1.60억</td><td class="cell-muted">9.5%</td><td class="val-up">1.80억</td><td class="val-up">9.9%</td><td class="val-up col-group-start">112.5%</td><td class="val-up">+0.4%p</td><td class="col-group-start cell-muted">9.50억</td><td class="cell-muted">14.0%</td><td class="val-up">10.20억</td><td class="val-up">14.5%</td><td class="val-up col-group-start">107.4%</td><td class="val-up">+0.5%p</td></tr>
+                <tr><td>차량OE</td><td class="col-group-start cell-muted">1.00억</td><td class="cell-muted">6.3%</td><td>0.90억</td><td>6.2%</td><td class="val-down col-group-start">90.0%</td><td class="val-down">-0.1%p</td><td class="col-group-start cell-muted">6.00억</td><td class="cell-muted">6.3%</td><td>5.40억</td><td>6.1%</td><td class="val-down col-group-start">90.0%</td><td class="val-down">-0.2%p</td></tr>
+                <tr class="total-row"><td>합계</td><td class="col-group-start">3.70억</td><td>7.5%</td><td>3.15억</td><td>6.6%</td><td class="col-group-start">85.1%</td><td class="val-down">-0.9%p</td><td class="col-group-start">22.00억</td><td>8.4%</td><td>21.00억</td><td>8.3%</td><td class="col-group-start">95.5%</td><td class="val-down">-0.1%p</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ③ 전년 동월 대비 -->
+      <section class="content-panel" id="panel-3">
+        <h1 class="panel-title">③ 전년 동월 대비</h1>
+        <p class="panel-sub">2025년 6월 vs 2026년 6월</p>
+        <div class="card">
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr class="group-head">
+                  <th class="blank"></th>
+                  <th colspan="6">2025년 6월</th>
+                  <th colspan="6">2026년 6월</th>
+                  <th colspan="6">전년대비</th>
+                </tr>
+                <tr>
+                  <th>팀</th>
+                  <th class="col-group-start">수량</th><th>매출액</th><th>이익</th><th>이익(%)</th><th>판관비</th><th>변동율</th>
+                  <th class="col-group-start">수량</th><th>매출액</th><th>이익</th><th>이익(%)</th><th>판관비</th><th>변동율</th>
+                  <th class="col-group-start">수량</th><th>매출액</th><th>이익</th><th>이익(%)</th><th>판관비</th><th>변동율</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>고정형</td><td class="col-group-start cell-muted">2,450</td><td class="cell-muted">4.3억</td><td class="cell-muted">0.35억</td><td class="cell-muted">8.1%</td><td class="cell-muted">0.35억</td><td class="cell-muted">-</td><td class="col-group-start">2,100</td><td>3.7억</td><td class="val-down">-0.60억</td><td class="val-down">-16.2%</td><td>0.35억</td><td>-</td><td class="col-group-start val-down">-14.3%</td><td class="val-down">-14.0%</td><td class="val-down">-271%</td><td class="val-down">-24.3%p</td><td>0.0%</td><td class="val-down">적자전환</td></tr>
+                <tr><td>모티브</td><td class="col-group-start cell-muted">4,050</td><td class="cell-muted">6.0억</td><td class="cell-muted">0.45억</td><td class="cell-muted">7.5%</td><td class="cell-muted">0.48억</td><td class="cell-muted">-</td><td class="col-group-start">4,200</td><td>6.4억</td><td>0.50억</td><td>7.8%</td><td>0.51억</td><td>-</td><td class="col-group-start val-up">+3.7%</td><td class="val-up">+6.7%</td><td class="val-up">+11.1%</td><td class="val-up">+0.3%p</td><td class="val-up">+6.3%</td><td>-</td></tr>
+                <tr><td>산전팀</td><td class="col-group-start cell-muted">2,750</td><td class="cell-muted">4.5억</td><td class="cell-muted">0.40억</td><td class="cell-muted">8.9%</td><td class="cell-muted">0.41억</td><td class="cell-muted">-</td><td class="col-group-start">3,050</td><td>5.1억</td><td class="val-up">0.55억</td><td class="val-up">10.8%</td><td>0.44억</td><td>-</td><td class="col-group-start val-up">+10.9%</td><td class="val-up">+13.3%</td><td class="val-up">+37.5%</td><td class="val-up">+1.9%p</td><td class="val-up">+7.3%</td><td>-</td></tr>
+                <tr><td>차량대리점</td><td class="col-group-start cell-muted">11,650</td><td class="cell-muted">16.7억</td><td class="cell-muted">1.65억</td><td class="cell-muted">9.9%</td><td class="cell-muted">1.05억</td><td class="cell-muted">-</td><td class="col-group-start">12,400</td><td>18.2억</td><td class="val-up">1.80억</td><td>9.9%</td><td>1.13억</td><td>-</td><td class="col-group-start val-up">+6.4%</td><td class="val-up">+9.0%</td><td class="val-up">+9.1%</td><td>0.0%p</td><td class="val-up">+7.6%</td><td>-</td></tr>
+                <tr><td>차량OE</td><td class="col-group-start cell-muted">10,150</td><td class="cell-muted">15.0억</td><td class="cell-muted">1.00억</td><td class="cell-muted">6.7%</td><td class="cell-muted">1.07억</td><td class="cell-muted">-</td><td class="col-group-start">9,800</td><td>14.5억</td><td>0.90억</td><td>6.2%</td><td>1.03억</td><td>-</td><td class="col-group-start val-down">-3.4%</td><td class="val-down">-3.3%</td><td class="val-down">-10.0%</td><td class="val-down">-0.5%p</td><td class="val-down">-3.7%</td><td>-</td></tr>
+                <tr class="total-row"><td>합계</td><td class="col-group-start">31,050</td><td>46.5억</td><td>3.85억</td><td>8.3%</td><td>3.36억</td><td>-</td><td class="col-group-start">31,550</td><td>47.9억</td><td>3.15억</td><td>6.6%</td><td>3.46억</td><td>-</td><td class="col-group-start val-up">+1.6%</td><td class="val-up">+3.0%</td><td class="val-down">-18.2%</td><td class="val-down">-1.7%p</td><td class="val-up">+3.0%</td><td>-</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <p class="section-note">신규 팀/제품군으로 전년 동월 데이터가 없는 경우 "비교 불가"로 표시하고 변동율 계산에서 제외합니다 (0%나 임의값으로 대체하지 않음).</p>
+      </section>
+
+      <!-- ④ 전년 누계 대비 -->
+      <section class="content-panel" id="panel-4">
+        <h1 class="panel-title">④ 전년 누계 대비</h1>
+        <p class="panel-sub">2025년 1~6월 누계 vs 2026년 1~6월 누계</p>
+        <div class="card">
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr class="group-head">
+                  <th class="blank"></th>
+                  <th colspan="6">2025년 누계</th>
+                  <th colspan="6">2026년 누계</th>
+                  <th colspan="6">전년 누계대비</th>
+                </tr>
+                <tr>
+                  <th>팀</th>
+                  <th class="col-group-start">수량</th><th>매출액</th><th>이익</th><th>이익(%)</th><th>판관비</th><th>변동율</th>
+                  <th class="col-group-start">수량</th><th>매출액</th><th>이익</th><th>이익(%)</th><th>판관비</th><th>변동율</th>
+                  <th class="col-group-start">수량</th><th>매출액</th><th>이익</th><th>이익(%)</th><th>판관비</th><th>변동율</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>고정형</td><td class="col-group-start cell-muted">15,200</td><td class="cell-muted">27.5억</td><td class="cell-muted">2.10억</td><td class="cell-muted">7.6%</td><td class="cell-muted">2.20억</td><td class="cell-muted">-</td><td class="col-group-start">14,900</td><td>25.0억</td><td class="val-down">-0.30억</td><td class="val-down">-1.2%</td><td>2.35억</td><td>-</td><td class="col-group-start val-down">-2.0%</td><td class="val-down">-9.1%</td><td class="val-down">-114%</td><td class="val-down">-8.8%p</td><td class="val-down">+6.8%</td><td>-</td></tr>
+                <tr><td>모티브</td><td class="col-group-start cell-muted">24,900</td><td class="cell-muted">36.0억</td><td class="cell-muted">2.70억</td><td class="cell-muted">7.5%</td><td class="cell-muted">2.90억</td><td class="cell-muted">-</td><td class="col-group-start">25,900</td><td>39.0억</td><td>3.00억</td><td>7.7%</td><td>3.05억</td><td>-</td><td class="col-group-start val-up">+4.0%</td><td class="val-up">+8.3%</td><td class="val-up">+11.1%</td><td class="val-up">+0.2%p</td><td class="val-up">+5.2%</td><td>-</td></tr>
+                <tr><td>산전팀</td><td class="col-group-start cell-muted">17,300</td><td class="cell-muted">26.5억</td><td class="cell-muted">2.30억</td><td class="cell-muted">8.7%</td><td class="cell-muted">2.35억</td><td class="cell-muted">-</td><td class="col-group-start">19,400</td><td>30.5억</td><td class="val-up">2.70억</td><td class="val-up">8.9%</td><td>2.55억</td><td>-</td><td class="col-group-start val-up">+12.1%</td><td class="val-up">+15.1%</td><td class="val-up">+17.4%</td><td class="val-up">+0.2%p</td><td class="val-up">+8.5%</td><td>-</td></tr>
+                <tr><td>차량대리점</td><td class="col-group-start cell-muted">64,100</td><td class="cell-muted">64.8억</td><td class="cell-muted">9.10억</td><td class="cell-muted">14.0%</td><td class="cell-muted">6.30억</td><td class="cell-muted">-</td><td class="col-group-start">67,800</td><td>70.5억</td><td class="val-up">10.20억</td><td>14.5%</td><td>6.55억</td><td>-</td><td class="col-group-start val-up">+5.8%</td><td class="val-up">+8.8%</td><td class="val-up">+12.1%</td><td class="val-up">+0.5%p</td><td class="val-up">+4.0%</td><td>-</td></tr>
+                <tr><td>차량OE</td><td class="col-group-start cell-muted">60,500</td><td class="cell-muted">90.2억</td><td class="cell-muted">5.90억</td><td class="cell-muted">6.5%</td><td class="cell-muted">6.35억</td><td class="cell-muted">-</td><td class="col-group-start">58,400</td><td>88.0억</td><td>5.40억</td><td>6.1%</td><td>6.20억</td><td>-</td><td class="col-group-start val-down">-3.5%</td><td class="val-down">-2.4%</td><td class="val-down">-8.5%</td><td class="val-down">-0.4%p</td><td class="val-down">-2.4%</td><td>-</td></tr>
+                <tr class="total-row"><td>합계</td><td class="col-group-start">182,000</td><td>245.0억</td><td>22.10억</td><td>9.0%</td><td>20.10억</td><td>-</td><td class="col-group-start">186,400</td><td>253.0억</td><td>21.00억</td><td>8.3%</td><td>20.70억</td><td>-</td><td class="col-group-start val-up">+2.4%</td><td class="val-up">+3.3%</td><td class="val-down">-5.0%</td><td class="val-down">-0.7%p</td><td class="val-up">+3.0%</td><td>-</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ⑤ 전월 대비 -->
+      <section class="content-panel" id="panel-5">
+        <h1 class="panel-title">⑤ 전월 대비</h1>
+        <p class="panel-sub">2026년 5월 vs 2026년 6월</p>
+        <div class="card">
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr class="group-head">
+                  <th class="blank"></th>
+                  <th colspan="6">2026년 5월</th>
+                  <th colspan="6">2026년 6월</th>
+                  <th colspan="6">전월대비</th>
+                </tr>
+                <tr>
+                  <th>팀</th>
+                  <th class="col-group-start">수량</th><th>매출액</th><th>이익</th><th>이익(%)</th><th>판관비</th><th>변동율</th>
+                  <th class="col-group-start">수량</th><th>매출액</th><th>이익</th><th>이익(%)</th><th>판관비</th><th>변동율</th>
+                  <th class="col-group-start">수량</th><th>매출액</th><th>이익</th><th>이익(%)</th><th>판관비</th><th>변동율</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>고정형</td><td class="col-group-start cell-muted">2,600</td><td class="cell-muted">4.6억</td><td class="cell-muted">0.15억</td><td class="cell-muted">3.3%</td><td class="cell-muted">0.32억</td><td class="cell-muted">-</td><td class="col-group-start">2,100</td><td>3.7億</td><td class="val-down">-0.60억</td><td class="val-down">-16.2%</td><td>0.35억</td><td>-</td><td class="col-group-start val-down">-19.2%</td><td class="val-down">-19.6%</td><td class="val-down">-500%</td><td class="val-down">-19.5%p</td><td class="val-down">+9.4%</td><td>-</td></tr>
+                <tr><td>모티브</td><td class="col-group-start cell-muted">4,300</td><td class="cell-muted">6.5억</td><td class="cell-muted">0.48억</td><td class="cell-muted">7.4%</td><td class="cell-muted">0.50억</td><td class="cell-muted">-</td><td class="col-group-start">4,200</td><td>6.4억</td><td>0.50억</td><td>7.8%</td><td>0.51억</td><td>-</td><td class="col-group-start val-down">-2.3%</td><td class="val-down">-1.5%</td><td class="val-up">+4.2%</td><td class="val-up">+0.4%p</td><td class="val-up">+2.0%</td><td>-</td></tr>
+                <tr><td>산전팀</td><td class="col-group-start cell-muted">3,000</td><td class="cell-muted">4.9억</td><td class="cell-muted">0.52억</td><td class="cell-muted">10.6%</td><td class="cell-muted">0.42억</td><td class="cell-muted">-</td><td class="col-group-start">3,050</td><td>5.1억</td><td>0.55억</td><td>10.8%</td><td>0.44억</td><td>-</td><td class="col-group-start val-up">+1.7%</td><td class="val-up">+4.1%</td><td class="val-up">+5.8%</td><td class="val-up">+0.2%p</td><td class="val-up">+4.8%</td><td>-</td></tr>
+                <tr><td>차량대리점</td><td class="col-group-start cell-muted">12,900</td><td class="cell-muted">19.0억</td><td class="cell-muted">1.85억</td><td class="cell-muted">9.7%</td><td class="cell-muted">1.15억</td><td class="cell-muted">-</td><td class="col-group-start">12,400</td><td>18.2억</td><td>1.80억</td><td>9.9%</td><td>1.13억</td><td>-</td><td class="col-group-start val-down">-3.9%</td><td class="val-down">-4.2%</td><td class="val-down">-2.7%</td><td class="val-up">+0.2%p</td><td class="val-down">-1.7%</td><td>-</td></tr>
+                <tr><td>차량OE</td><td class="col-group-start cell-muted">10,050</td><td class="cell-muted">15.0억</td><td class="cell-muted">1.05억</td><td class="cell-muted">7.0%</td><td class="cell-muted">1.02억</td><td class="cell-muted">-</td><td class="col-group-start">9,800</td><td>14.5억</td><td>0.90억</td><td>6.2%</td><td>1.03억</td><td>-</td><td class="col-group-start val-down">-2.5%</td><td class="val-down">-3.3%</td><td class="val-down">-14.3%</td><td class="val-down">-0.8%p</td><td class="val-up">+1.0%</td><td>-</td></tr>
+                <tr class="total-row"><td>합계</td><td class="col-group-start">32,850</td><td>50.0억</td><td>4.05억</td><td>8.1%</td><td>3.42억</td><td>-</td><td class="col-group-start">31,550</td><td>47.9억</td><td>3.15억</td><td>6.6%</td><td>3.46억</td><td>-</td><td class="col-group-start val-down">-4.0%</td><td class="val-down">-4.2%</td><td class="val-down">-22.2%</td><td class="val-down">-1.5%p</td><td class="val-up">+1.2%</td><td>-</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ⑥ 월별 실적 분석 (팀별) -->
+      <section class="content-panel" id="panel-6">
+        <h1 class="panel-title">⑥ 월별 실적 분석 (팀별)</h1>
+        <p class="panel-sub">단위: EA, 백만원 · 팀을 선택하면 1~12월 트렌드를 확인할 수 있습니다</p>
+        <div class="card">
+          <div class="subtab-row" id="team6-tabs">
+            <button class="subtab active" data-sub="team6-고정형">고정형</button>
+            <button class="subtab" data-sub="team6-모티브">모티브</button>
+            <button class="subtab" data-sub="team6-산전팀">산전팀</button>
+            <button class="subtab" data-sub="team6-차량대리점">차량대리점</button>
+            <button class="subtab" data-sub="team6-차량OE">차량OE</button>
+          </div>
+
+          <div class="sub-panel active" id="team6-고정형">
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead><tr><th>월</th><th>수량</th><th>매출액</th><th>영업이익</th><th>이익율</th><th>판관비</th><th>판관비율</th><th>제조원가</th><th>제조원가율</th><th>표준매출원가</th><th>가격변동율</th></tr></thead>
+                <tbody>
+                  <tr><td>1월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>2월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>3월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>4월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>5월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>6월</td><td>2,100</td><td>3,700</td><td>-600</td><td>-16.2%</td><td>350</td><td>9.5%</td><td>3,100</td><td>83.8%</td><td>3,050</td><td>-0.1%</td></tr>
+                  <tr><td>7월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>8월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>9월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>10월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>11월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>12월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr class="group-summary"><td>고정형 요약</td><td>14,900</td><td>25,000</td><td>-300</td><td>-1.2%</td><td>2,350</td><td>9.4%</td><td>19,800</td><td>79.2%</td><td>19,500</td><td>-0.1%</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="sub-panel" id="team6-모티브">
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead><tr><th>월</th><th>수량</th><th>매출액</th><th>영업이익</th><th>이익율</th><th>판관비</th><th>판관비율</th><th>제조원가</th><th>제조원가율</th><th>표준매출원가</th><th>가격변동율</th></tr></thead>
+                <tbody>
+                  <tr><td>1월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>2월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>3월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>4월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>5월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>6월</td><td>4,200</td><td>6,400</td><td>500</td><td>7.8%</td><td>510</td><td>8.0%</td><td>5,450</td><td>85.2%</td><td>5,300</td><td>+2.0%</td></tr>
+                  <tr><td>7월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>8월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>9월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>10월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>11월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>12월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr class="group-summary"><td>모티브 요약</td><td>250,607</td><td>38,725</td><td>2,336</td><td>6.0%</td><td>3,420</td><td>8.8%</td><td>32,968</td><td>85.1%</td><td>31,735</td><td>-4.1%</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="sub-panel" id="team6-산전팀">
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead><tr><th>월</th><th>수량</th><th>매출액</th><th>영업이익</th><th>이익율</th><th>판관비</th><th>판관비율</th><th>제조원가</th><th>제조원가율</th><th>표준매출원가</th><th>가격변동율</th></tr></thead>
+                <tbody>
+                  <tr><td>1월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>2월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>3월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>4월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>5월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>6월</td><td>3,050</td><td>5,100</td><td>550</td><td>10.8%</td><td>440</td><td>8.6%</td><td>4,200</td><td>82.4%</td><td>4,050</td><td>+1.3%</td></tr>
+                  <tr><td>7월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>8월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>9월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>10월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>11월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>12월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr class="group-summary"><td>산전팀 요약</td><td>1,038,149</td><td>111,356</td><td>12,317</td><td>11.1%</td><td>10,127</td><td>9.1%</td><td>88,912</td><td>79.8%</td><td>85,571</td><td>-1.5%</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="sub-panel" id="team6-차량대리점">
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead><tr><th>월</th><th>수량</th><th>매출액</th><th>영업이익</th><th>이익율</th><th>판관비</th><th>판관비율</th><th>제조원가</th><th>제조원가율</th><th>표준매출원가</th><th>가격변동율</th></tr></thead>
+                <tbody>
+                  <tr><td>1월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>2월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>3월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>4월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>5월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>6월</td><td>12,400</td><td>18,200</td><td>1,800</td><td>9.9%</td><td>1,130</td><td>6.2%</td><td>15,270</td><td>83.9%</td><td>14,900</td><td>+0.4%</td></tr>
+                  <tr><td>7월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>8월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>9월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>10월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>11월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>12월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr class="group-summary"><td>차량대리점 요약</td><td>67,800</td><td>70,500</td><td>10,200</td><td>14.5%</td><td>6,550</td><td>9.3%</td><td>53,750</td><td>76.2%</td><td>52,900</td><td>+0.6%</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="sub-panel" id="team6-차량OE">
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead><tr><th>월</th><th>수량</th><th>매출액</th><th>영업이익</th><th>이익율</th><th>판관비</th><th>판관비율</th><th>제조원가</th><th>제조원가율</th><th>표준매출원가</th><th>가격변동율</th></tr></thead>
+                <tbody>
+                  <tr><td>1월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>2월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>3월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>4월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>5월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>6월</td><td>9,800</td><td>14,500</td><td>900</td><td>6.2%</td><td>1,030</td><td>7.1%</td><td>12,570</td><td>86.7%</td><td>12,300</td><td>-0.8%</td></tr>
+                  <tr><td>7월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>8월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>9월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>10월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>11월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>12월</td><td colspan="9" class="cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr class="group-summary"><td>차량OE 요약</td><td>58,400</td><td>88,000</td><td>5,400</td><td>6.1%</td><td>6,200</td><td>7.0%</td><td>76,300</td><td>86.7%</td><td>74,900</td><td>-1.0%</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <p class="section-note">1~5월, 7~12월은 해당 월의 UploadBatch가 아직 없어 비어 있습니다. 매월 업로드가 누적되면 자동으로 채워집니다.</p>
+      </section>
+
+      <!-- ⑦ 월별 실적 분석 (제품군별) -->
+      <section class="content-panel" id="panel-7">
+        <h1 class="panel-title">⑦ 월별 실적 분석 (제품군별)</h1>
+        <p class="panel-sub">단위: EA, 백만원 · 제품군을 선택하면 하위 제품구분별 상세를 확인할 수 있습니다</p>
+        <div class="card">
+          <div class="subtab-row">
+            <button class="subtab active" data-sub="group7-차량AS">차량AS</button>
+            <button class="subtab" data-sub="group7-차량OE">차량OE</button>
+            <button class="subtab" data-sub="group7-산업용">산업용</button>
+          </div>
+
+          <div class="sub-panel active" id="group7-차량AS">
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr class="group-head"><th class="blank"></th><th colspan="8">당월</th><th colspan="8">금년 누계</th></tr>
+                  <tr>
+                    <th>제품구분</th>
+                    <th class="col-group-start">수량</th><th>매출액</th><th>영업이익</th><th>이익율</th><th>평균단가</th><th>제조원가율</th><th>판관비율</th><th>가격변동율</th>
+                    <th class="col-group-start">수량</th><th>매출액</th><th>영업이익</th><th>이익율</th><th>평균단가</th><th>제조원가율</th><th>판관비율</th><th>가격변동율</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>GB 중소형</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>GB 대형</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>AGM</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>선박</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>농기계</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>TAXI</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>PT</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>이륜용</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>상품</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>미지정</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr class="group-summary"><td>차량AS 요약</td><td class="col-group-start">12,400</td><td>18,200</td><td>1,800</td><td>9.9%</td><td>1,468</td><td>83.9%</td><td>6.2%</td><td>+0.4%</td><td class="col-group-start">67,800</td><td>70,500</td><td>10,200</td><td>14.5%</td><td>1,040</td><td>76.2%</td><td>9.3%</td><td>+0.6%</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="sub-panel" id="group7-차량OE">
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr class="group-head"><th class="blank"></th><th colspan="8">당월</th><th colspan="8">금년 누계</th></tr>
+                  <tr>
+                    <th>제품구분</th>
+                    <th class="col-group-start">수량</th><th>매출액</th><th>영업이익</th><th>이익율</th><th>평균단가</th><th>제조원가율</th><th>판관비율</th><th>가격변동율</th>
+                    <th class="col-group-start">수량</th><th>매출액</th><th>영업이익</th><th>이익율</th><th>평균단가</th><th>제조원가율</th><th>판관비율</th><th>가격변동율</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>AGM</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>GB 중소형</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>GB 대형</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>PT</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>리튬전지</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>리튬전지 정산</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>미지정</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>이륜용</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr class="group-summary"><td>차량OE 요약</td><td class="col-group-start">9,800</td><td>14,500</td><td>900</td><td>6.2%</td><td>1,480</td><td>86.7%</td><td>7.1%</td><td>-0.8%</td><td class="col-group-start">58,400</td><td>88,000</td><td>5,400</td><td>6.1%</td><td>1,507</td><td>86.7%</td><td>7.0%</td><td>-1.0%</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="sub-panel" id="group7-산업용">
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr class="group-head"><th class="blank"></th><th colspan="8">당월</th><th colspan="8">금년 누계</th></tr>
+                  <tr>
+                    <th>제품구분</th>
+                    <th class="col-group-start">수량</th><th>매출액</th><th>영업이익</th><th>이익율</th><th>평균단가</th><th>제조원가율</th><th>판관비율</th><th>가격변동율</th>
+                    <th class="col-group-start">수량</th><th>매출액</th><th>영업이익</th><th>이익율</th><th>평균단가</th><th>제조원가율</th><th>판관비율</th><th>가격변동율</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>V전지:Set</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>V전지:Cell</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>LONGEST(액식)</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>LONGEST(EB)</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>GB 중소형 / GB 대형 / AGM / LM</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>RP 소형 / 중형 / 대형</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>ES 소형 / 중형 / 대형</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>MSB 소형 / 중형 / 대형</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>GSL 소형 / 중형 / 대형</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>VGS 소형 / 중형 / 대형</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>CGS 소형 / 중형</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>PS 소형 / 중형 / 대형</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>PT / 리튬전지 / 부대품</td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="7" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr class="group-summary"><td>산업용 요약</td><td class="col-group-start">7,250</td><td>11,500</td><td>1,050</td><td>9.1%</td><td>1,586</td><td>83.4%</td><td>8.4%</td><td>+0.9%</td><td class="col-group-start">38,700</td><td>60,000</td><td>5,700</td><td>9.5%</td><td>1,550</td><td>82.5%</td><td>8.9%</td><td>+1.0%</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--light-gray-200); display:flex; justify-content:flex-end;">
+            <table class="data-table" style="max-width: 420px;">
+              <tbody>
+                <tr class="total-row"><td>총 합계 (당월)</td><td>29,450</td><td>44,200</td><td>3,750</td><td>8.5%</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <p class="section-note">산업용은 항목이 많아 유사 규격끼리 묶어 표시했습니다. 실제 화면에서는 참고 양식과 동일하게 개별 행으로 펼쳐집니다.</p>
+      </section>
+
+      <!-- ⑧ 팀별×거래처별 상세 -->
+      <section class="content-panel" id="panel-8">
+        <h1 class="panel-title">⑧ 팀별×거래처별 상세</h1>
+        <p class="panel-sub">단위: EA, 백만원 · 팀을 선택하면 거래처별 상세를 확인할 수 있습니다</p>
+        <div class="card">
+          <div class="subtab-row" id="team8-tabs">
+            <button class="subtab active" data-sub="team8-고정형">고정형</button>
+            <button class="subtab" data-sub="team8-모티브">모티브</button>
+            <button class="subtab" data-sub="team8-산전팀">산전팀</button>
+            <button class="subtab" data-sub="team8-차량대리점">차량대리점</button>
+            <button class="subtab" data-sub="team8-차량OE">차량OE</button>
+          </div>
+
+          <div class="sub-panel active" id="team8-고정형">
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr class="group-head"><th class="blank"></th><th colspan="5">당월</th><th colspan="5">금년 누계</th></tr>
+                  <tr>
+                    <th>거래처</th>
+                    <th class="col-group-start">수량</th><th>매출액</th><th>영업이익</th><th>이익율</th><th>가격변동율</th>
+                    <th class="col-group-start">수량</th><th>매출액</th><th>영업이익</th><th>이익율</th><th>가격변동율</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>한국전력공사</td><td colspan="4" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="4" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>한국수력원자력</td><td colspan="4" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="4" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>… 그 외 거래처</td><td colspan="4" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="4" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr class="group-summary"><td>고정형 요약</td><td class="col-group-start">2,100</td><td>3,700</td><td>-600</td><td>-16.2%</td><td>-0.1%</td><td class="col-group-start">14,900</td><td>25,000</td><td>-300</td><td>-1.2%</td><td>-0.1%</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="sub-panel" id="team8-모티브">
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr class="group-head"><th class="blank"></th><th colspan="5">당월</th><th colspan="5">금년 누계</th></tr>
+                  <tr><th>거래처</th><th class="col-group-start">수량</th><th>매출액</th><th>영업이익</th><th>이익율</th><th>가격변동율</th><th class="col-group-start">수량</th><th>매출액</th><th>영업이익</th><th>이익율</th><th>가격변동율</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>(주)에스엘</td><td colspan="4" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="4" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr><td>… 그 외 거래처</td><td colspan="4" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="4" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr class="group-summary"><td>모티브 요약</td><td class="col-group-start">4,200</td><td>6,400</td><td>500</td><td>7.8%</td><td>+2.0%</td><td class="col-group-start">25,900</td><td>39,000</td><td>3,000</td><td>7.7%</td><td>-4.1%</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="sub-panel" id="team8-산전팀">
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr class="group-head"><th class="blank"></th><th colspan="5">당월</th><th colspan="5">금년 누계</th></tr>
+                  <tr><th>거래처</th><th class="col-group-start">수량</th><th>매출액</th><th>영업이익</th><th>이익율</th><th>가격변동율</th><th class="col-group-start">수량</th><th>매출액</th><th>영업이익</th><th>이익율</th><th>가격변동율</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>… 거래처 목록</td><td colspan="4" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="4" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr class="group-summary"><td>산전팀 요약</td><td class="col-group-start">3,050</td><td>5,100</td><td>550</td><td>10.8%</td><td>+1.3%</td><td class="col-group-start">19,400</td><td>30,500</td><td>2,700</td><td>8.9%</td><td>+1.3%</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="sub-panel" id="team8-차량대리점">
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr class="group-head"><th class="blank"></th><th colspan="5">당월</th><th colspan="5">금년 누계</th></tr>
+                  <tr><th>거래처</th><th class="col-group-start">수량</th><th>매출액</th><th>영업이익</th><th>이익율</th><th>가격변동율</th><th class="col-group-start">수량</th><th>매출액</th><th>영업이익</th><th>이익율</th><th>가격변동율</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>가나자동차 주식회사</td><td class="col-group-start">1,850</td><td>4,600</td><td>500</td><td>10.9%</td><td>+0.4%</td><td class="col-group-start">11,200</td><td>27,600</td><td>3,200</td><td>11.6%</td><td>+0.6%</td></tr>
+                  <tr><td>(주)샘플전지대전점</td><td class="col-group-start">2,100</td><td>3,900</td><td>400</td><td>10.3%</td><td>+0.2%</td><td class="col-group-start">12,600</td><td>23,400</td><td>2,700</td><td>11.5%</td><td>+0.5%</td></tr>
+                  <tr><td>… 그 외 거래처</td><td colspan="4" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="4" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr class="group-summary"><td>차량대리점 요약</td><td class="col-group-start">12,400</td><td>18,200</td><td>1,800</td><td>9.9%</td><td>+0.4%</td><td class="col-group-start">67,800</td><td>70,500</td><td>10,200</td><td>14.5%</td><td>+0.6%</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="sub-panel" id="team8-차량OE">
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr class="group-head"><th class="blank"></th><th colspan="5">당월</th><th colspan="5">금년 누계</th></tr>
+                  <tr><th>거래처</th><th class="col-group-start">수량</th><th>매출액</th><th>영업이익</th><th>이익율</th><th>가격변동율</th><th class="col-group-start">수량</th><th>매출액</th><th>영업이익</th><th>이익율</th><th>가격변동율</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>현대모비스(주)</td><td class="col-group-start">3,400</td><td>6,100</td><td>400</td><td>6.6%</td><td>-0.8%</td><td class="col-group-start">20,500</td><td>36,000</td><td>2,300</td><td>6.4%</td><td>-0.9%</td></tr>
+                  <tr><td>… 그 외 거래처</td><td colspan="4" class="col-group-start cell-muted"></td><td class="cell-muted"></td><td colspan="4" class="col-group-start cell-muted"></td><td class="cell-muted"></td></tr>
+                  <tr class="group-summary"><td>차량OE 요약</td><td class="col-group-start">9,800</td><td>14,500</td><td>900</td><td>6.2%</td><td>-0.8%</td><td class="col-group-start">58,400</td><td>88,000</td><td>5,400</td><td>6.1%</td><td>-1.0%</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <p class="footer-note">본 화면은 PRD F4(전체 실적 Overview) 기준 목업이며, 사용자가 제공한 실제 사내 보고 양식을 근거로 구성했습니다. 수치는 실제 데이터가 아닌 예시입니다.</p>
+
+    </main>
+  </div>
+
+  <script>
+    // 좌측 섹션 탭 전환
+    document.getElementById('nav-list').addEventListener('click', function (e) {
+      var btn = e.target.closest('.nav-item');
+      if (!btn) return;
+      document.querySelectorAll('.nav-item').forEach(function (el) { el.classList.remove('active'); });
+      document.querySelectorAll('.content-panel').forEach(function (el) { el.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.panel).classList.add('active');
+    });
+
+    // 섹션 내부 서브탭(팀/제품군 선택) 전환
+    document.querySelectorAll('.subtab-row').forEach(function (row) {
+      row.addEventListener('click', function (e) {
+        var btn = e.target.closest('.subtab');
+        if (!btn) return;
+        var siblingTabs = row.querySelectorAll('.subtab');
+        siblingTabs.forEach(function (el) { el.classList.remove('active'); });
+        btn.classList.add('active');
+        // 이 subtab-row가 속한 card 안의 sub-panel만 전환
+        var card = row.closest('.card');
+        card.querySelectorAll('.sub-panel').forEach(function (el) { el.classList.remove('active'); });
+        var target = document.getElementById(btn.dataset.sub);
+        if (target) target.classList.add('active');
+      });
+    });
+  </script>
+
+</body>
+</html>

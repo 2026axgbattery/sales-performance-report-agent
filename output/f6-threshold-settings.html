@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>임계치 설정 — 영업실적·손익 분석 Agent</title>
+<style>
+  :root {
+    --sebang-dark-gray: #333F48; --sebang-gray: #A2AAAD; --sebang-light-gray: #D0D0CE;
+    --sebang-green: #0097A9; --sebang-green-600: #008090; --sebang-green-700: #006A76;
+    --sebang-orange: #EB3300; --sebang-orange-700: #A42400;
+    --gray-50: #F8F8F8; --gray-200: #DADDDE; --light-gray-50: #FBFBFB;
+    --light-gray-200: #ECECEB; --light-gray-400: #D9D9D8; --orange-50: #FDEFEB; --green-50: #EBF7F8;
+    --color-bg-base: #FFFFFF; --color-bg-surface: #FBFBFB; --color-border: var(--sebang-light-gray);
+    --color-text-primary: var(--sebang-dark-gray); --color-text-secondary: #717779; --color-text-disabled: #B5BBBD;
+    --color-brand-primary: var(--sebang-dark-gray); --color-accent-primary: var(--sebang-orange);
+    --color-accent-secondary: var(--sebang-green-700); --color-success: var(--sebang-green-600); --color-danger: var(--sebang-orange-700);
+    --font-family-base: "Pretendard", "Noto Sans KR", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
+    --radius-sm: 4px; --radius-md: 8px; --radius-lg: 16px; --radius-full: 999px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--font-family-base); background: var(--gray-50); color: var(--color-text-primary); line-height: 1.6; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; background: var(--color-bg-base); border-bottom: 1px solid var(--color-border); padding: var(--space-4) var(--space-6); }
+  .brand { display: flex; align-items: center; gap: var(--space-3); }
+  .brand-mark { width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--color-brand-primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9375rem; letter-spacing: -0.5px; }
+  .brand-title { font-weight: 700; font-size: 1.0625rem; }
+  .brand-sub { color: var(--color-text-secondary); font-size: 0.8125rem; }
+  .back-link { font-size: 0.8125rem; color: var(--color-text-secondary); text-decoration: none; display: flex; align-items: center; gap: 6px; }
+  .back-link:hover { color: var(--color-text-primary); }
+  .step-indicator { display: flex; align-items: center; gap: var(--space-2); font-size: 0.8125rem; color: var(--color-text-secondary); }
+  .step { display: flex; align-items: center; gap: 6px; text-decoration: none; color: inherit; }
+  .step-dot { width: 20px; height: 20px; border-radius: var(--radius-full); background: var(--light-gray-200); color: var(--color-text-secondary); font-size: 0.6875rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step span:last-child { display: none; white-space: nowrap; }
+  .step.done .step-dot { background: var(--sebang-green-700); color: #fff; }
+  .step.current .step-dot { background: var(--color-accent-primary); color: #fff; }
+  .step.current span:last-child { display: inline; color: var(--color-text-primary); font-weight: 600; }
+  .step:hover .step-dot { filter: brightness(0.9); }
+  .step-sep { width: 12px; height: 1px; background: var(--color-border); flex-shrink: 0; }
+  .btn { font-family: inherit; font-size: 0.9375rem; font-weight: 600; border-radius: var(--radius-md); padding: var(--space-2) var(--space-4); cursor: pointer; border: 1px solid transparent; text-decoration:none; display:inline-block; transition: filter 150ms cubic-bezier(0.4,0,0.2,1); }
+  .btn:hover { filter: brightness(0.92); }
+  .btn-secondary { background: transparent; border-color: var(--color-brand-primary); color: var(--color-brand-primary); }
+  .btn-primary { background: var(--color-accent-primary); color: #fff; }
+  .page { max-width: 720px; margin: 0 auto; padding: var(--space-6); }
+  .page-title { font-size: 1.25rem; font-weight: 700; margin: 0 0 4px; }
+  .page-sub { color: var(--color-text-secondary); font-size: 0.875rem; margin: 0 0 var(--space-6); }
+  .card { background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: 0 2px 8px rgba(51,63,72,0.06); padding: var(--space-5); margin-bottom: var(--space-5); }
+  .unsaved-banner {
+    display: flex; align-items: center; gap: var(--space-3);
+    background: var(--orange-50); border: 1px solid #F7AD99; color: var(--color-danger);
+    border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4);
+    font-size: 0.8125rem; margin-bottom: var(--space-5);
+  }
+  .threshold-row {
+    display: grid; grid-template-columns: 1fr auto auto; align-items: center;
+    gap: var(--space-4); padding: var(--space-4) 0; border-bottom: 1px solid var(--light-gray-200);
+  }
+  .threshold-row:last-child { border-bottom: none; }
+  .threshold-name { font-size: 0.9375rem; font-weight: 600; }
+  .threshold-desc { font-size: 0.75rem; color: var(--color-text-secondary); margin-top: 2px; }
+  .threshold-input-group { display: flex; align-items: center; gap: 6px; }
+  .threshold-input {
+    width: 64px; font-family: inherit; font-size: 0.9375rem; text-align: right;
+    border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+    padding: 6px var(--space-2); background: var(--color-bg-base); color: var(--color-text-primary);
+  }
+  .threshold-input:focus { outline: none; border-color: var(--sebang-orange); }
+  .threshold-unit { font-size: 0.8125rem; color: var(--color-text-secondary); }
+  .threshold-special {
+    font-size: 0.8125rem; color: var(--color-text-secondary); font-style: normal;
+    background: var(--light-gray-200); padding: 4px var(--space-3); border-radius: var(--radius-sm);
+  }
+  .reset-link { font-size: 0.75rem; color: var(--color-text-disabled); background:none; border:none; cursor:pointer; text-decoration: underline; }
+  .action-bar { display: flex; align-items: center; justify-content: space-between; margin-top: var(--space-6); padding-top: var(--space-5); border-top: 1px solid var(--color-border); }
+  .action-note { font-size: 0.8125rem; color: var(--color-text-secondary); }
+</style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">EB</div>
+      <div>
+        <div class="brand-title">영업실적·손익 분석 Agent</div>
+        <div class="brand-sub">국내영업기획팀 · 김영우 책임</div>
+      </div>
+    </div>
+    <div class="step-indicator">
+      <a class="step done" href="f1-file-upload.html" title="1. 파일 업로드"><span class="step-dot">✓</span><span>파일 업로드</span></a>
+      <span class="step-sep"></span>
+      <a class="step done" href="f2-data-mapping.html" title="2. 정제·매핑"><span class="step-dot">✓</span><span>정제·매핑</span></a>
+      <span class="step-sep"></span>
+      <a class="step done" href="f3-anomaly-detection.html" title="3. 증감률·이상징후 계산"><span class="step-dot">✓</span><span>이상징후 계산</span></a>
+      <span class="step-sep"></span>
+      <a class="step done" href="f4-overview.html" title="4. Overview"><span class="step-dot">✓</span><span>Overview</span></a>
+      <span class="step-sep"></span>
+      <a class="step done" href="f5-anomaly-highlights.html" title="5. 이상징후 하이라이트"><span class="step-dot">✓</span><span>하이라이트</span></a>
+      <span class="step-sep"></span>
+      <a class="step current" href="f6-threshold-settings.html" title="6. 임계치 설정"><span class="step-dot">6</span><span>임계치 설정</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f7-report-draft.html" title="7. 보고서 초안 자동 생성"><span class="step-dot">7</span><span>보고서 초안</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f8-report-review.html" title="8. 보고서 초안 검토·수정"><span class="step-dot">8</span><span>검토·수정</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f9-download.html" title="9. 결과 다운로드"><span class="step-dot">9</span><span>다운로드</span></a>
+    </div>
+  </header>
+
+  <main class="page">
+
+    <h1 class="page-title">임계치 설정</h1>
+    <p class="page-sub">이상징후 하이라이트(5단계)를 확인한 뒤, 필요하면 판단 기준을 조정하세요. 고정값이 아니며, 저장하면 이 값이 반영된 상태로 보고서 초안(7단계)이 생성됩니다.</p>
+
+    <div class="unsaved-banner">
+      <span>!</span>
+      <span>저장하지 않은 변경 사항이 있습니다. 저장해야 보고서 초안 생성에 반영됩니다.</span>
+    </div>
+
+    <section class="card">
+      <div class="threshold-row">
+        <div>
+          <div class="threshold-name">전월 대비 매출/이익 증감률</div>
+          <div class="threshold-desc">이 비율 이상 변동하면 이상징후로 표시합니다</div>
+        </div>
+        <div class="threshold-input-group">
+          <span class="threshold-unit">±</span>
+          <input type="text" class="threshold-input" value="10">
+          <span class="threshold-unit">%</span>
+        </div>
+        <button class="reset-link">기본값(10%)</button>
+      </div>
+
+      <div class="threshold-row">
+        <div>
+          <div class="threshold-name">전년 동월 대비 증감률</div>
+          <div class="threshold-desc">전년 동월 대비 변동 기준</div>
+        </div>
+        <div class="threshold-input-group">
+          <span class="threshold-unit">±</span>
+          <input type="text" class="threshold-input" value="15">
+          <span class="threshold-unit">%</span>
+        </div>
+        <button class="reset-link">기본값(15%)</button>
+      </div>
+
+      <div class="threshold-row">
+        <div>
+          <div class="threshold-name">계획 대비 달성률</div>
+          <div class="threshold-desc">이 범위를 벗어나면 이상징후로 표시합니다</div>
+        </div>
+        <div class="threshold-input-group">
+          <input type="text" class="threshold-input" value="90"> <span class="threshold-unit">%↓</span>
+          <input type="text" class="threshold-input" value="120"> <span class="threshold-unit">%↑</span>
+        </div>
+        <button class="reset-link">기본값</button>
+      </div>
+
+      <div class="threshold-row">
+        <div>
+          <div class="threshold-name">손익 흑자→적자 전환</div>
+          <div class="threshold-desc">임계치 없이 조건 충족 시 항상 플래그</div>
+        </div>
+        <span class="threshold-special">임계치 없음</span>
+        <span></span>
+      </div>
+
+      <div class="threshold-row">
+        <div>
+          <div class="threshold-name">평균단가 변동률</div>
+          <div class="threshold-desc">전월 대비 평균 판매 단가 변동 기준</div>
+        </div>
+        <div class="threshold-input-group">
+          <span class="threshold-unit">±</span>
+          <input type="text" class="threshold-input" value="5">
+          <span class="threshold-unit">%</span>
+        </div>
+        <button class="reset-link">기본값(5%)</button>
+      </div>
+
+      <div class="threshold-row">
+        <div>
+          <div class="threshold-name">판관비/기타비용 급증</div>
+          <div class="threshold-desc">전월 대비 증가율 기준</div>
+        </div>
+        <div class="threshold-input-group">
+          <span class="threshold-unit">+</span>
+          <input type="text" class="threshold-input" value="20">
+          <span class="threshold-unit">%</span>
+        </div>
+        <button class="reset-link">기본값(20%)</button>
+      </div>
+    </section>
+
+    <div class="action-bar">
+      <button class="btn btn-secondary">모두 기본값으로 재설정</button>
+      <a href="f7-report-draft.html" class="btn btn-primary">저장하고 보고서 초안 생성하기 →</a>
+    </div>
+
+  </main>
+
+</body>
+</html>

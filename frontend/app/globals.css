@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+/*
+  세방(SEBANG) CI 디자인 토큰 — .docs/design.md 기준.
+  output/*.html 목업에서 쓴 CSS 변수와 동일한 값·이름을 사용해 일관성을 유지한다.
+*/
+:root {
+  --sebang-dark-gray: #333f48;
+  --sebang-gray: #a2aaad;
+  --sebang-light-gray: #d0d0ce;
+
+  --sebang-green: #0097a9;
+  --sebang-green-600: #008090;
+  --sebang-green-700: #006a76;
+  --sebang-orange: #eb3300;
+  --sebang-orange-700: #a42400;
+
+  --gray-50: #f8f8f8;
+  --gray-200: #DADDDE;
+  --light-gray-50: #fbfbfb;
+  --light-gray-200: #ececeb;
+  --light-gray-400: #d9d9d8;
+  --orange-50: #fdefeb;
+  --green-50: #ebf7f8;
+  --green-300: #66c1cb;
+  --dark-gray-50: #eff0f0;
+  --dark-gray-100: #d6d9da;
+  --dark-gray-300: #858c91;
+  --dark-gray-600: #2b363d;
+  --dark-gray-700: #242c32;
+
+  --color-bg-page: var(--dark-gray-50);
+  /* design.md Elevation: 저채도 다크그레이 그림자만 사용 */
+  --shadow-card: 0 1px 2px rgba(51, 63, 72, 0.06), 0 2px 8px rgba(51, 63, 72, 0.08);
+  --shadow-hero: 0 2px 8px rgba(51, 63, 72, 0.12);
+
+  --color-bg-base: #ffffff;
+  --color-bg-surface: #fbfbfb;
+  --color-border: var(--sebang-light-gray);
+  --color-text-primary: var(--sebang-dark-gray);
+  --color-text-secondary: #717779;
+  --color-text-disabled: #b5bbbd;
+  --color-brand-primary: var(--sebang-dark-gray);
+  --color-accent-primary: var(--sebang-orange);
+  --color-accent-secondary: var(--sebang-green-700);
+  --color-success: var(--sebang-green-600);
+  --color-danger: var(--sebang-orange-700);
+}
+
+@theme inline {
+  --color-background: var(--color-bg-base);
+  --color-foreground: var(--color-text-primary);
+  --font-sans: "Pretendard", "Noto Sans KR", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --color-sebang-dark-gray: var(--sebang-dark-gray);
+  --color-sebang-gray: var(--sebang-gray);
+  --color-sebang-light-gray: var(--sebang-light-gray);
+  --color-sebang-green: var(--sebang-green);
+  --color-sebang-green-600: var(--sebang-green-600);
+  --color-sebang-green-700: var(--sebang-green-700);
+  --color-sebang-orange: var(--sebang-orange);
+  --color-sebang-orange-700: var(--sebang-orange-700);
+
+  --color-gray-50: var(--gray-50);
+  --color-gray-200: var(--gray-200);
+  --color-light-gray-50: var(--light-gray-50);
+  --color-light-gray-200: var(--light-gray-200);
+  --color-light-gray-400: var(--light-gray-400);
+  --color-orange-50: var(--orange-50);
+  --color-green-50: var(--green-50);
+
+  /* :root의 시맨틱 토큰(--color-bg-surface 등)은 이미 CSS 변수이므로
+     bg-[var(--color-bg-surface)]처럼 임의값 문법으로 바로 쓸 수 있다.
+     여기서 다시 선언하면 자기 참조가 되어 무효해지므로 추가하지 않는다. */
+}
+
+/* README 배너와 같은 옅은 격자 패턴 (다크 헤더·페이지 헤더 배경용) */
+.bg-hero-grid {
+  background-color: var(--dark-gray-700);
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(135deg, var(--dark-gray-700), var(--sebang-dark-gray));
+  background-size: 40px 40px, 40px 40px, 100% 100%;
+}
+
+body {
+  background: var(--color-bg-page);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}

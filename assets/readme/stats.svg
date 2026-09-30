@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="150" viewBox="0 0 1200 150">
+  <g font-family="Pretendard, 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif">
+    <g transform="translate(0 0)">
+      <rect x="1" y="1" width="282" height="148" rx="12" fill="#FFFFFF" stroke="#D0D0CE"/>
+      <rect x="1" y="1" width="6" height="148" rx="3" fill="#333F48"/>
+      <text x="32" y="44" fill="#717779" font-size="15" font-weight="600">MVP 기능</text>
+      <text x="32" y="102" fill="#333F48" font-size="52" font-weight="800">9</text>
+      <text x="32" y="130" fill="#717779" font-size="14">F1 업로드 ~ F9 다운로드</text>
+    </g>
+    <g transform="translate(306 0)">
+      <rect x="1" y="1" width="282" height="148" rx="12" fill="#FFFFFF" stroke="#D0D0CE"/>
+      <rect x="1" y="1" width="6" height="148" rx="3" fill="#EB3300"/>
+      <text x="32" y="44" fill="#717779" font-size="15" font-weight="600">이상징후 판정 기준</text>
+      <text x="32" y="102" fill="#A42400" font-size="52" font-weight="800">7</text>
+      <text x="32" y="130" fill="#717779" font-size="14">임계치 화면에서 조정</text>
+    </g>
+    <g transform="translate(612 0)">
+      <rect x="1" y="1" width="282" height="148" rx="12" fill="#FFFFFF" stroke="#D0D0CE"/>
+      <rect x="1" y="1" width="6" height="148" rx="3" fill="#0097A9"/>
+      <text x="32" y="44" fill="#717779" font-size="15" font-weight="600">입력 파일 종류</text>
+      <text x="32" y="102" fill="#006A76" font-size="52" font-weight="800">4</text>
+      <text x="32" y="130" fill="#717779" font-size="14">실적·매핑·계획·손익계산서</text>
+    </g>
+    <g transform="translate(918 0)">
+      <rect x="1" y="1" width="280" height="148" rx="12" fill="#FFFFFF" stroke="#D0D0CE"/>
+      <rect x="1" y="1" width="6" height="148" rx="3" fill="#008090"/>
+      <text x="32" y="44" fill="#717779" font-size="15" font-weight="600">월간 보고서 초안</text>
+      <text x="32" y="102" fill="#333F48" font-size="52" font-weight="800">1<tspan font-size="26" dx="6">회 업로드</tspan></text>
+      <text x="32" y="130" fill="#717779" font-size="14">업로드부터 초안까지 자동</text>
+    </g>
+  </g>
+</svg>

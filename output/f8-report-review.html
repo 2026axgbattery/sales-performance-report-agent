@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>보고서 초안 검토·수정 — 영업실적·손익 분석 Agent</title>
+<style>
+  :root {
+    --sebang-dark-gray: #333F48; --sebang-gray: #A2AAAD; --sebang-light-gray: #D0D0CE;
+    --sebang-green: #0097A9; --sebang-green-600: #008090; --sebang-green-700: #006A76;
+    --sebang-orange: #EB3300; --sebang-orange-700: #A42400;
+    --gray-50: #F8F8F8; --gray-200: #DADDDE; --light-gray-50: #FBFBFB;
+    --light-gray-200: #ECECEB; --light-gray-400: #D9D9D8; --orange-50: #FDEFEB; --green-50: #EBF7F8;
+    --color-bg-base: #FFFFFF; --color-bg-surface: #FBFBFB; --color-border: var(--sebang-light-gray);
+    --color-text-primary: var(--sebang-dark-gray); --color-text-secondary: #717779; --color-text-disabled: #B5BBBD;
+    --color-brand-primary: var(--sebang-dark-gray); --color-accent-primary: var(--sebang-orange);
+    --color-accent-secondary: var(--sebang-green-700); --color-success: var(--sebang-green-600); --color-danger: var(--sebang-orange-700);
+    --font-family-base: "Pretendard", "Noto Sans KR", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
+    --radius-sm: 4px; --radius-md: 8px; --radius-lg: 16px; --radius-full: 999px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--font-family-base); background: var(--gray-50); color: var(--color-text-primary); line-height: 1.6; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; background: var(--color-bg-base); border-bottom: 1px solid var(--color-border); padding: var(--space-4) var(--space-6); }
+  .brand { display: flex; align-items: center; gap: var(--space-3); }
+  .brand-mark { width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--color-brand-primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9375rem; letter-spacing: -0.5px; }
+  .brand-title { font-weight: 700; font-size: 1.0625rem; }
+  .brand-sub { color: var(--color-text-secondary); font-size: 0.8125rem; }
+  .step-indicator { display: flex; align-items: center; gap: var(--space-2); font-size: 0.8125rem; color: var(--color-text-secondary); }
+  .step { display: flex; align-items: center; gap: 6px; text-decoration: none; color: inherit; }
+  .step-dot { width: 20px; height: 20px; border-radius: var(--radius-full); background: var(--light-gray-200); color: var(--color-text-secondary); font-size: 0.6875rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step span:last-child { display: none; white-space: nowrap; }
+  .step.done .step-dot { background: var(--sebang-green-700); color: #fff; }
+  .step.current .step-dot { background: var(--color-accent-primary); color: #fff; }
+  .step.current span:last-child { display: inline; color: var(--color-text-primary); font-weight: 600; }
+  .step:hover .step-dot { filter: brightness(0.9); }
+  .step-sep { width: 12px; height: 1px; background: var(--color-border); flex-shrink: 0; }
+  .btn { font-family: inherit; font-size: 0.9375rem; font-weight: 600; border-radius: var(--radius-md); padding: var(--space-2) var(--space-4); cursor: pointer; border: 1px solid transparent; text-decoration:none; display:inline-block; transition: filter 150ms cubic-bezier(0.4,0,0.2,1); }
+  .btn:hover { filter: brightness(0.92); }
+  .btn-secondary { background: transparent; border-color: var(--color-brand-primary); color: var(--color-brand-primary); }
+  .btn-primary { background: var(--color-accent-primary); color: #fff; }
+  .btn-text { background: none; border: none; color: var(--color-text-secondary); font-size: 0.8125rem; font-weight: 600; cursor: pointer; padding: 4px 8px; }
+  .btn-text:hover { color: var(--color-danger); }
+  .page { max-width: 900px; margin: 0 auto; padding: var(--space-6); }
+  .page-title { font-size: 1.25rem; font-weight: 700; margin: 0 0 4px; }
+  .page-sub { color: var(--color-text-secondary); font-size: 0.875rem; margin: 0 0 var(--space-6); }
+  .review-card { background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: 0 2px 8px rgba(51,63,72,0.06); padding: var(--space-5); margin-bottom: var(--space-4); }
+  .review-card.excluded { opacity: 0.5; }
+  .review-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3); }
+  .review-title-group { display: flex; align-items: center; gap: var(--space-3); }
+  .anomaly-badge { font-size: 0.6875rem; font-weight: 700; padding: 3px var(--space-2); border-radius: var(--radius-sm); white-space: nowrap; background: var(--orange-50); color: var(--color-danger); }
+  .review-title { font-size: 0.9375rem; font-weight: 600; }
+  .review-actions { display: flex; gap: var(--space-2); }
+  .field-label { font-size: 0.6875rem; color: var(--color-text-disabled); font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 4px; }
+  .auto-comment-box {
+    font-size: 0.8125rem; color: var(--color-text-primary);
+    background: var(--light-gray-50); border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm); padding: var(--space-3);
+    margin-bottom: var(--space-3);
+  }
+  textarea.user-note {
+    width: 100%; font-family: inherit; font-size: 0.8125rem; color: var(--color-text-primary);
+    border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+    padding: var(--space-3); resize: vertical; min-height: 56px;
+    background: var(--color-bg-base);
+  }
+  textarea.user-note:focus { outline: none; border-color: var(--sebang-orange); }
+  .toggle-row { display: flex; align-items: center; gap: var(--space-2); font-size: 0.75rem; color: var(--color-text-secondary); margin-top: var(--space-3); }
+  .checkbox { width: 14px; height: 14px; accent-color: var(--sebang-orange); }
+  .action-bar { display: flex; align-items: center; justify-content: space-between; margin-top: var(--space-6); padding-top: var(--space-5); border-top: 1px solid var(--color-border); }
+  .action-note { font-size: 0.8125rem; color: var(--color-text-secondary); }
+</style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">EB</div>
+      <div>
+        <div class="brand-title">영업실적·손익 분석 Agent</div>
+        <div class="brand-sub">국내영업기획팀 · 김영우 책임</div>
+      </div>
+    </div>
+    <div class="step-indicator">
+      <a class="step done" href="f1-file-upload.html" title="1. 파일 업로드"><span class="step-dot">✓</span><span>파일 업로드</span></a>
+      <span class="step-sep"></span>
+      <a class="step done" href="f2-data-mapping.html" title="2. 정제·매핑"><span class="step-dot">✓</span><span>정제·매핑</span></a>
+      <span class="step-sep"></span>
+      <a class="step done" href="f3-anomaly-detection.html" title="3. 증감률·이상징후 계산"><span class="step-dot">✓</span><span>이상징후 계산</span></a>
+      <span class="step-sep"></span>
+      <a class="step done" href="f4-overview.html" title="4. Overview"><span class="step-dot">✓</span><span>Overview</span></a>
+      <span class="step-sep"></span>
+      <a class="step done" href="f5-anomaly-highlights.html" title="5. 이상징후 하이라이트"><span class="step-dot">✓</span><span>하이라이트</span></a>
+      <span class="step-sep"></span>
+      <a class="step done" href="f6-threshold-settings.html" title="6. 임계치 설정"><span class="step-dot">✓</span><span>임계치 설정</span></a>
+      <span class="step-sep"></span>
+      <a class="step done" href="f7-report-draft.html" title="7. 보고서 초안 자동 생성"><span class="step-dot">✓</span><span>보고서 초안</span></a>
+      <span class="step-sep"></span>
+      <a class="step current" href="f8-report-review.html" title="8. 보고서 초안 검토·수정"><span class="step-dot">8</span><span>검토·수정</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f9-download.html" title="9. 결과 다운로드"><span class="step-dot">9</span><span>다운로드</span></a>
+    </div>
+  </header>
+
+  <main class="page">
+
+    <h1 class="page-title">보고서 초안 검토·수정</h1>
+    <p class="page-sub">AI가 오탐지했거나 문맥(특이비용 배경, 거래처 이슈 등)을 놓친 부분을 직접 수정·보완하세요. 수정 이력은 별도로 관리하지 않습니다.</p>
+
+    <div class="review-card">
+      <div class="review-header">
+        <div class="review-title-group">
+          <span class="anomaly-badge">흑자→적자 전환</span>
+          <span class="review-title">대구지사 · 산업용 배터리</span>
+        </div>
+        <div class="review-actions">
+          <button class="btn-text">보고서에서 제외</button>
+        </div>
+      </div>
+
+      <div class="field-label">자동 생성 코멘트 (수정 가능)</div>
+      <div class="auto-comment-box" contenteditable="true">대구지사 산업용 배터리 영업이익이 전월 +0.3억에서 이번 달 -0.6억으로 전환되었습니다. 계획 대비 74% 달성, 전월 대비 -18.4% 감소했습니다.</div>
+
+      <div class="field-label">담당자 배경 설명 추가</div>
+      <textarea class="user-note" placeholder="예: 대구지사 A 거래처向 단가 인상이 8월 중순 반영되어 다음 달부터 정상화 예정">8월 중 원자재(니켈) 단가 급등분이 반영되지 못해 발생한 일시적 적자. 9월부터 단가 인상 적용 예정.</textarea>
+    </div>
+
+    <div class="review-card">
+      <div class="review-header">
+        <div class="review-title-group">
+          <span class="anomaly-badge">계획 대비 미달</span>
+          <span class="review-title">광주지사 · 자동차용 배터리</span>
+        </div>
+        <div class="review-actions">
+          <button class="btn-text">보고서에서 제외</button>
+        </div>
+      </div>
+
+      <div class="field-label">자동 생성 코멘트 (수정 가능)</div>
+      <div class="auto-comment-box" contenteditable="true">광주지사 자동차용 배터리 매출이 계획 대비 79% 달성에 그쳤습니다. 전월 대비 -14.8% 감소했습니다.</div>
+
+      <div class="field-label">담당자 배경 설명 추가</div>
+      <textarea class="user-note" placeholder="배경 설명을 입력하세요"></textarea>
+    </div>
+
+    <div class="review-card excluded">
+      <div class="review-header">
+        <div class="review-title-group">
+          <span class="anomaly-badge">평균단가 변동</span>
+          <span class="review-title">서울지사 · 산업용 배터리</span>
+        </div>
+        <div class="review-actions">
+          <button class="btn-text" style="color:var(--sebang-green-700);">보고서에 다시 포함</button>
+        </div>
+      </div>
+      <div class="field-label">제외 사유</div>
+      <div class="auto-comment-box">담당자 확인 결과 정상적인 계절 할인 정책 반영分으로, 이상징후가 아님을 확인해 보고서에서 제외함.</div>
+    </div>
+
+    <div class="toggle-row">
+      <input type="checkbox" class="checkbox" id="hide-excluded" checked>
+      <label for="hide-excluded">제외된 항목은 다운로드 시 보고서에 포함하지 않기</label>
+    </div>
+
+    <div class="action-bar">
+      <span class="action-note">39건 중 37건 포함 · 2건 제외됨</span>
+      <a href="f9-download.html" class="btn btn-primary">검토 완료 → 다운로드로 이동</a>
+    </div>
+
+  </main>
+
+</body>
+</html>

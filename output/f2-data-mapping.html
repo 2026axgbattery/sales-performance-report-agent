@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>데이터 정제·매핑 — 영업실적·손익 분석 Agent</title>
+<style>
+  :root {
+    --sebang-dark-gray: #333F48;
+    --sebang-gray: #A2AAAD;
+    --sebang-light-gray: #D0D0CE;
+
+    --sebang-green: #0097A9;
+    --sebang-green-600: #008090;
+    --sebang-green-700: #006A76;
+    --sebang-orange: #EB3300;
+    --sebang-orange-700: #A42400;
+
+    --gray-50: #F8F8F8;
+    --gray-200: #DADDDE;
+    --light-gray-50: #FBFBFB;
+    --light-gray-200: #ECECEB;
+    --light-gray-400: #D9D9D8;
+    --orange-50: #FDEFEB;
+    --green-50: #EBF7F8;
+
+    --color-bg-base: #FFFFFF;
+    --color-bg-surface: #FBFBFB;
+    --color-border: var(--sebang-light-gray);
+    --color-text-primary: var(--sebang-dark-gray);
+    --color-text-secondary: #717779;
+    --color-text-disabled: #B5BBBD;
+    --color-brand-primary: var(--sebang-dark-gray);
+    --color-accent-primary: var(--sebang-orange);
+    --color-accent-secondary: var(--sebang-green-700);
+    --color-success: var(--sebang-green-600);
+    --color-danger: var(--sebang-orange-700);
+
+    --font-family-base: "Pretendard", "Noto Sans KR", "Inter", system-ui,
+      -apple-system, "Segoe UI", Roboto, sans-serif;
+
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+    --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
+
+    --radius-sm: 4px; --radius-md: 8px; --radius-lg: 16px; --radius-full: 999px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: var(--font-family-base);
+    background: var(--gray-50);
+    color: var(--color-text-primary);
+    line-height: 1.6;
+  }
+
+  /* ── Top bar (Overview/업로드 화면과 통일) ─────────────── */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--color-bg-base);
+    border-bottom: 1px solid var(--color-border);
+    padding: var(--space-4) var(--space-6);
+  }
+  .brand { display: flex; align-items: center; gap: var(--space-3); }
+  .brand-mark {
+    width: 32px; height: 32px; border-radius: var(--radius-sm);
+    background: var(--color-brand-primary); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.9375rem; letter-spacing: -0.5px;
+  }
+  .brand-title { font-weight: 700; font-size: 1.0625rem; }
+  .brand-sub { color: var(--color-text-secondary); font-size: 0.8125rem; }
+
+  .step-indicator { display: flex; align-items: center; gap: var(--space-2); font-size: 0.8125rem; color: var(--color-text-secondary); }
+  .step { display: flex; align-items: center; gap: 6px; text-decoration: none; color: inherit; }
+  .step-dot {
+    width: 20px; height: 20px; border-radius: var(--radius-full);
+    background: var(--light-gray-200); color: var(--color-text-secondary);
+    font-size: 0.6875rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .step span:last-child { display: none; white-space: nowrap; }
+  .step.done .step-dot { background: var(--sebang-green-700); color: #fff; }
+  .step.current .step-dot { background: var(--color-accent-primary); color: #fff; }
+  .step.current span:last-child { display: inline; color: var(--color-text-primary); font-weight: 600; }
+  .step:hover .step-dot { filter: brightness(0.9); }
+  .step-sep { width: 12px; height: 1px; background: var(--color-border); flex-shrink: 0; }
+
+  .btn {
+    font-family: inherit; font-size: 0.9375rem; font-weight: 600;
+    border-radius: var(--radius-md); padding: var(--space-2) var(--space-4);
+    cursor: pointer; border: 1px solid transparent;
+    transition: filter 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .btn:hover { filter: brightness(0.92); }
+  .btn-secondary { background: transparent; border-color: var(--color-brand-primary); color: var(--color-brand-primary); }
+  .btn-primary { background: var(--color-accent-primary); color: #fff; }
+  .btn-primary:disabled { background: var(--light-gray-400); color: var(--color-text-disabled); cursor: not-allowed; filter: none; }
+  .btn-sm {
+    font-size: 0.8125rem; font-weight: 600; padding: 4px var(--space-3);
+    border-radius: var(--radius-sm); cursor: pointer;
+    background: var(--sebang-dark-gray); color: #fff; border: none;
+  }
+
+  /* ── Layout ────────────────────────────────────────────── */
+  .page { max-width: 1120px; margin: 0 auto; padding: var(--space-6); }
+  .page-title { font-size: 1.25rem; font-weight: 700; margin: 0 0 4px; }
+  .page-sub { color: var(--color-text-secondary); font-size: 0.875rem; margin: 0 0 var(--space-6); }
+
+  .card {
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: 0 2px 8px rgba(51, 63, 72, 0.06);
+    padding: var(--space-5);
+    margin-bottom: var(--space-5);
+  }
+
+  .card-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: var(--space-3); }
+  .card-title { font-size: 0.9375rem; font-weight: 700; }
+  .card-desc { font-size: 0.8125rem; color: var(--color-text-secondary); margin: -8px 0 var(--space-4); }
+
+  /* ── Processing summary ────────────────────────────────── */
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); margin-bottom: var(--space-6); }
+  .summary-card {
+    background: var(--color-bg-surface); border: 1px solid var(--color-border);
+    border-radius: var(--radius-md); padding: var(--space-4);
+    box-shadow: 0 2px 8px rgba(51, 63, 72, 0.06);
+  }
+  .summary-label { font-size: 0.8125rem; color: var(--color-text-secondary); margin-bottom: var(--space-2); }
+  .summary-value { font-size: 1.5rem; font-weight: 700; }
+  .summary-value.ok { color: var(--sebang-green-700); }
+  .summary-value.warn { color: var(--color-danger); }
+
+  /* ── Logic note ────────────────────────────────────────── */
+  .logic-note {
+    display: flex; align-items: center; gap: var(--space-3);
+    font-size: 0.8125rem; color: var(--color-text-secondary);
+    background: var(--light-gray-50); border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+  .logic-formula {
+    font-weight: 700; color: var(--color-text-primary);
+    background: var(--light-gray-200); padding: 2px var(--space-2);
+    border-radius: var(--radius-sm); font-size: 0.8125rem;
+  }
+
+  /* ── Table ─────────────────────────────────────────────── */
+  table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+  thead th {
+    text-align: left; color: var(--color-text-secondary);
+    font-weight: 600; padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--color-border);
+    white-space: nowrap;
+  }
+  tbody td {
+    padding: var(--space-3); border-bottom: 1px solid var(--light-gray-200);
+    vertical-align: middle;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  .cell-strong { font-weight: 600; }
+  .cell-muted { color: var(--color-text-secondary); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  .status-chip { font-size: 0.6875rem; font-weight: 700; padding: 3px var(--space-2); border-radius: var(--radius-sm); white-space: nowrap; display: inline-block; }
+  .status-ok { background: var(--green-50); color: var(--sebang-green-700); }
+  .status-warn { background: var(--orange-50); color: var(--color-danger); }
+  .status-neutral { background: var(--light-gray-200); color: var(--color-text-secondary); }
+
+  .type-select {
+    font-family: inherit; font-size: 0.75rem; color: var(--color-text-primary);
+    background: var(--color-bg-base); border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm); padding: 3px var(--space-2);
+  }
+
+  .action-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: var(--space-6); padding-top: var(--space-5);
+    border-top: 1px solid var(--color-border);
+  }
+  .action-note { font-size: 0.8125rem; color: var(--color-text-secondary); }
+
+  .tab-row { display: flex; gap: var(--space-2); margin-bottom: var(--space-4); }
+  .tab {
+    font-size: 0.8125rem; font-weight: 600; padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-full); color: var(--color-text-secondary);
+    background: var(--light-gray-50); border: 1px solid var(--color-border);
+  }
+  .tab.active { color: var(--color-brand-primary); background: var(--light-gray-200); border-color: var(--sebang-light-gray); }
+</style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">EB</div>
+      <div>
+        <div class="brand-title">영업실적·손익 분석 Agent</div>
+        <div class="brand-sub">국내영업기획팀 · 김영우 책임</div>
+      </div>
+    </div>
+    <div class="step-indicator">
+      <a class="step done" href="f1-file-upload.html" title="1. 파일 업로드"><span class="step-dot">✓</span><span>파일 업로드</span></a>
+      <span class="step-sep"></span>
+      <a class="step current" href="f2-data-mapping.html" title="2. 정제·매핑"><span class="step-dot">2</span><span>정제·매핑</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f3-anomaly-detection.html" title="3. 증감률·이상징후 계산"><span class="step-dot">3</span><span>이상징후 계산</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f4-overview.html" title="4. Overview"><span class="step-dot">4</span><span>Overview</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f5-anomaly-highlights.html" title="5. 이상징후 하이라이트"><span class="step-dot">5</span><span>하이라이트</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f6-threshold-settings.html" title="6. 임계치 설정"><span class="step-dot">6</span><span>임계치 설정</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f7-report-draft.html" title="7. 보고서 초안 자동 생성"><span class="step-dot">7</span><span>보고서 초안</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f8-report-review.html" title="8. 보고서 초안 검토·수정"><span class="step-dot">8</span><span>검토·수정</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f9-download.html" title="9. 결과 다운로드"><span class="step-dot">9</span><span>다운로드</span></a>
+    </div>
+  </header>
+
+  <main class="page">
+
+    <h1 class="page-title">데이터 정제·매핑</h1>
+    <p class="page-sub">1단계에서 업로드한 제품분류 매핑표를 기준으로 실적 데이터를 정제하고, 계정과목별 산출 규칙을 적용해 지사·제품군·팀 단위로 구조화했습니다.</p>
+
+    <!-- 처리 결과 요약 -->
+    <section class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-label">전체 레코드</div>
+        <div class="summary-value">1,842건</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">매핑 성공</div>
+        <div class="summary-value ok">1,791건</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">미매핑 제품코드</div>
+        <div class="summary-value warn">37건</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">계산 오류</div>
+        <div class="summary-value warn">14건</div>
+      </div>
+    </section>
+
+    <!-- 매핑 키 구성 -->
+    <div class="logic-note">
+      <span>⚙</span>
+      <span>매핑은 제품코드 단독이 아니라 <span class="logic-formula">팀 구분 + 제품코드</span> 합성 키(예: <span class="logic-formula">산전MAZ00001</span>)로 조회하며, 매핑표의 제품구분1~4 중 <span class="logic-formula">제품구분3 (계획비교용)</span>을 제품군으로 채택합니다. 계정과목별 금액은 항목마다 다른 규칙(원본값 복사 / 여러 항목 합산·차감 / 상위 소계에서 하위 항목을 뺀 역산 / 매출-원가-판관비 최종 계산)으로 산출됩니다. 팀별 손익계산서가 함께 업로드되어 팀 단위 손익 관점 분석도 병행 구조화됩니다.</span>
+    </div>
+
+    <!-- 미매핑 제품코드 처리 -->
+    <section class="card">
+      <div class="card-header">
+        <div class="card-title">미매핑 제품코드 (37건)</div>
+        <button class="btn-sm">1단계에서 매핑표 다시 업로드</button>
+      </div>
+      <p class="card-desc">1단계에서 업로드한 제품분류 매핑표에 "팀+제품코드" 키가 없는 항목입니다. 집계에서 제외하지 않고 "미매핑"으로 표시했습니다 — 조용히 누락되지 않도록 직접 확인해 주세요.</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>매핑 키 (팀+제품코드)</th>
+            <th>발생 지사</th>
+            <th class="num">건수</th>
+            <th class="num">영향 금액</th>
+            <th>상태</th>
+            <th>조치</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="cell-strong">차량대리점PB2201N</td>
+            <td>대구지사</td>
+            <td class="num">12</td>
+            <td class="num">3,400만</td>
+            <td><span class="status-chip status-warn">미매핑</span></td>
+            <td><select class="type-select"><option>제품구분3 지정</option><option>산업용 배터리</option><option>자동차용 배터리</option></select></td>
+          </tr>
+          <tr>
+            <td class="cell-strong">차량대리점PB2201S</td>
+            <td>대구지사</td>
+            <td class="num">9</td>
+            <td class="num">2,150만</td>
+            <td><span class="status-chip status-warn">미매핑</span></td>
+            <td><select class="type-select"><option>제품구분3 지정</option><option>산업용 배터리</option><option>자동차용 배터리</option></select></td>
+          </tr>
+          <tr>
+            <td class="cell-strong">산전EV9910A</td>
+            <td>서울지사</td>
+            <td class="num">6</td>
+            <td class="num">8,900만</td>
+            <td><span class="status-chip status-warn">미매핑</span></td>
+            <td><select class="type-select"><option>제품구분3 지정</option><option>산업용 배터리</option><option>자동차용 배터리</option></select></td>
+          </tr>
+          <tr>
+            <td class="cell-muted">그 외 34건</td>
+            <td class="cell-muted">-</td>
+            <td class="num cell-muted">10</td>
+            <td class="num cell-muted">1,200만</td>
+            <td><span class="status-chip status-neutral">확인 대기</span></td>
+            <td class="cell-muted">전체 보기 →</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 계산 오류 -->
+    <section class="card">
+      <div class="card-header">
+        <div class="card-title">계산 오류 (14건)</div>
+      </div>
+      <p class="card-desc">원본 참조 값이 비어 있거나 비정상이어서 해당 계정과목을 산출 규칙대로 계산할 수 없는 행입니다. 전체 집계는 막지 않고 별도로 표시했습니다.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>지사</th>
+            <th>제품군</th>
+            <th>계정과목</th>
+            <th>산출 규칙</th>
+            <th>사유</th>
+            <th>상태</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>인천지사</td>
+            <td>자동차용 배터리</td>
+            <td class="cell-strong">기타매출원가</td>
+            <td class="cell-muted">역산 (실제매출원가 − 재료비·노무비·경비 소계)</td>
+            <td class="cell-muted">참조 원가 항목 값 없음</td>
+            <td><span class="status-chip status-warn">계산 오류</span></td>
+          </tr>
+          <tr>
+            <td>광주지사</td>
+            <td>산업용 배터리</td>
+            <td class="cell-strong">원재료비</td>
+            <td class="cell-muted">합산 (순연+경연+칼슘연+니켈+리튬)</td>
+            <td class="cell-muted">음수 값 비정상</td>
+            <td><span class="status-chip status-warn">계산 오류</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 정제된 실적 테이블 미리보기 -->
+    <section class="card">
+      <div class="card-header">
+        <div class="card-title">정제된 실적 테이블 미리보기</div>
+      </div>
+      <div class="tab-row">
+        <span class="tab active">지사·제품군 기준</span>
+        <span class="tab">팀 단위 손익 기준</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>지사</th>
+            <th>제품군</th>
+            <th>계정과목3</th>
+            <th class="num">실적 금액</th>
+            <th class="num">계획 금액</th>
+            <th class="num">전월 금액</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>서울지사</td>
+            <td>산업용 배터리</td>
+            <td class="cell-strong">매출총이익</td>
+            <td class="num">8.2억</td>
+            <td class="num">7.6억</td>
+            <td class="num">8.7억</td>
+          </tr>
+          <tr>
+            <td>부산지사</td>
+            <td>자동차용 배터리</td>
+            <td class="cell-strong">매출총이익</td>
+            <td class="num">6.4억</td>
+            <td class="num">6.3억</td>
+            <td class="num">6.1억</td>
+          </tr>
+          <tr>
+            <td>대구지사</td>
+            <td>산업용 배터리</td>
+            <td class="cell-strong">영업이익</td>
+            <td class="num">-0.6억</td>
+            <td class="num">0.8억</td>
+            <td class="num">0.3억</td>
+          </tr>
+          <tr>
+            <td class="cell-muted">… 그 외 1,835건</td>
+            <td class="cell-muted">-</td>
+            <td class="cell-muted">-</td>
+            <td class="cell-muted num">-</td>
+            <td class="cell-muted num">-</td>
+            <td class="cell-muted num">-</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <div class="action-bar">
+      <span class="action-note">미매핑 37건 · 계산 오류 14건이 남아 있어도 다음 단계로 진행할 수 있습니다.</span>
+      <a href="f3-anomaly-detection.html" class="btn btn-primary">증감률·이상징후 계산으로 이동 →</a>
+    </div>
+
+  </main>
+
+</body>
+</html>

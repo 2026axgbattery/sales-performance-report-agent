@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>파일 업로드 — 영업실적·손익 분석 Agent</title>
+<style>
+  :root {
+    /* Primary (neutral) */
+    --sebang-dark-gray: #333F48;
+    --sebang-gray: #A2AAAD;
+    --sebang-light-gray: #D0D0CE;
+
+    /* Point colors */
+    --sebang-green: #0097A9;
+    --sebang-green-600: #008090;
+    --sebang-green-700: #006A76;
+    --sebang-orange: #EB3300;
+    --sebang-orange-700: #A42400;
+
+    /* Tone scale (subset used here) */
+    --gray-50: #F8F8F8;
+    --gray-200: #DADDDE;
+    --light-gray-50: #FBFBFB;
+    --light-gray-200: #ECECEB;
+    --light-gray-400: #D9D9D8;
+    --orange-50: #FDEFEB;
+    --green-50: #EBF7F8;
+
+    /* Semantic */
+    --color-bg-base: #FFFFFF;
+    --color-bg-surface: #FBFBFB;
+    --color-border: var(--sebang-light-gray);
+    --color-text-primary: var(--sebang-dark-gray);
+    --color-text-secondary: #717779;
+    --color-text-disabled: #B5BBBD;
+    --color-brand-primary: var(--sebang-dark-gray);
+    --color-accent-primary: var(--sebang-orange);
+    --color-accent-secondary: var(--sebang-green-700);
+    --color-success: var(--sebang-green-600);
+    --color-danger: var(--sebang-orange-700);
+
+    /* Typography */
+    --font-family-base: "Pretendard", "Noto Sans KR", "Inter", system-ui,
+      -apple-system, "Segoe UI", Roboto, sans-serif;
+
+    /* Spacing (8px base) */
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+    --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
+
+    /* Radius */
+    --radius-sm: 4px; --radius-md: 8px; --radius-lg: 16px; --radius-full: 999px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: var(--font-family-base);
+    background: var(--gray-50);
+    color: var(--color-text-primary);
+    line-height: 1.6;
+  }
+
+  /* ── Top bar (동일 컴포넌트, Overview 화면과 통일) ───────── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--color-bg-base);
+    border-bottom: 1px solid var(--color-border);
+    padding: var(--space-4) var(--space-6);
+  }
+
+  .brand { display: flex; align-items: center; gap: var(--space-3); }
+
+  .brand-mark {
+    width: 32px; height: 32px;
+    border-radius: var(--radius-sm);
+    background: var(--color-brand-primary);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.9375rem; letter-spacing: -0.5px;
+  }
+
+  .brand-title { font-weight: 700; font-size: 1.0625rem; }
+  .brand-sub { color: var(--color-text-secondary); font-size: 0.8125rem; }
+
+  .step-indicator {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 0.8125rem;
+    color: var(--color-text-secondary);
+  }
+
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .step-dot {
+    width: 20px; height: 20px;
+    border-radius: var(--radius-full);
+    background: var(--light-gray-200);
+    color: var(--color-text-secondary);
+    font-size: 0.6875rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .step span:last-child { display: none; white-space: nowrap; }
+  .step.done .step-dot { background: var(--sebang-green-700); color: #fff; }
+  .step.current .step-dot { background: var(--color-accent-primary); color: #fff; }
+  .step.current span:last-child { display: inline; color: var(--color-text-primary); font-weight: 600; }
+  .step:hover .step-dot { filter: brightness(0.9); }
+  .step-sep { width: 12px; height: 1px; background: var(--color-border); flex-shrink: 0; }
+
+  .btn {
+    font-family: inherit;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    padding: var(--space-2) var(--space-4);
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: filter 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .btn:hover { filter: brightness(0.92); }
+  .btn-secondary {
+    background: transparent;
+    border-color: var(--color-brand-primary);
+    color: var(--color-brand-primary);
+  }
+  .btn-primary {
+    background: var(--color-accent-primary);
+    color: #fff;
+  }
+  .btn-primary:disabled {
+    background: var(--light-gray-400);
+    color: var(--color-text-disabled);
+    cursor: not-allowed;
+    filter: none;
+  }
+  .btn-ghost-sm {
+    background: transparent;
+    border: none;
+    color: var(--color-text-secondary);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    padding: 4px var(--space-2);
+    cursor: pointer;
+  }
+  .btn-ghost-sm:hover { color: var(--color-danger); }
+
+  /* ── Layout ────────────────────────────────────────────── */
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: var(--space-6);
+  }
+
+  .page-title { font-size: 1.25rem; font-weight: 700; margin: 0 0 4px; }
+  .page-sub { color: var(--color-text-secondary); font-size: 0.875rem; margin: 0 0 var(--space-6); }
+
+  .card {
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: 0 2px 8px rgba(51, 63, 72, 0.06);
+    padding: var(--space-5);
+    margin-bottom: var(--space-5);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: var(--space-3);
+  }
+
+  .card-title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+  }
+
+  .required-badge {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--color-danger);
+    background: var(--orange-50);
+    padding: 2px var(--space-2);
+    border-radius: var(--radius-sm);
+    margin-left: var(--space-2);
+  }
+
+  .optional-badge {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--color-text-secondary);
+    background: var(--light-gray-200);
+    padding: 2px var(--space-2);
+    border-radius: var(--radius-sm);
+    margin-left: var(--space-2);
+  }
+
+  .card-desc {
+    font-size: 0.8125rem;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-4);
+  }
+
+  /* ── Dropzone ──────────────────────────────────────────── */
+  .dropzone {
+    border: 2px dashed var(--sebang-light-gray);
+    border-radius: var(--radius-md);
+    background: var(--light-gray-50);
+    padding: var(--space-6);
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: border-color 150ms cubic-bezier(0.4, 0, 0.2, 1), background 150ms;
+  }
+  .dropzone:hover { border-color: var(--sebang-orange); background: var(--orange-50); }
+  .dropzone-icon {
+    width: 36px; height: 36px;
+    border-radius: var(--radius-full);
+    background: var(--light-gray-200);
+    color: var(--color-text-secondary);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto var(--space-3);
+    font-size: 1rem;
+  }
+  .dropzone-hint { font-size: 0.75rem; color: var(--color-text-disabled); margin-top: 4px; }
+  .dropzone-link { color: var(--sebang-green-700); font-weight: 600; }
+
+  /* ── Uploaded file row ─────────────────────────────────── */
+  .file-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-base);
+    margin-top: var(--space-3);
+  }
+
+  .file-icon {
+    width: 32px; height: 32px;
+    border-radius: var(--radius-sm);
+    background: var(--green-50);
+    color: var(--sebang-green-700);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .file-icon.warn { background: var(--orange-50); color: var(--color-danger); }
+
+  .file-meta { flex: 1; min-width: 0; }
+  .file-name {
+    font-size: 0.875rem; font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .file-sub { font-size: 0.75rem; color: var(--color-text-secondary); }
+
+  .file-type-select {
+    font-family: inherit;
+    font-size: 0.8125rem;
+    color: var(--color-text-primary);
+    background: var(--light-gray-50);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 4px var(--space-2);
+  }
+
+  .status-chip {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    padding: 3px var(--space-2);
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+  }
+  .status-ok { background: var(--green-50); color: var(--sebang-green-700); }
+  .status-warn { background: var(--orange-50); color: var(--color-danger); }
+
+  /* ── Alert banners ─────────────────────────────────────── */
+  .alert {
+    display: flex;
+    gap: var(--space-3);
+    align-items: flex-start;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-sm);
+    font-size: 0.8125rem;
+    margin-top: var(--space-4);
+  }
+  .alert-warn {
+    background: var(--orange-50);
+    color: var(--color-danger);
+    border: 1px solid #F7AD99;
+  }
+  .alert-icon { font-weight: 700; flex-shrink: 0; }
+
+  /* ── Sticky footer action bar ──────────────────────────── */
+  .action-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: var(--space-6);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .action-note {
+    font-size: 0.8125rem;
+    color: var(--color-text-secondary);
+  }
+</style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">EB</div>
+      <div>
+        <div class="brand-title">영업실적·손익 분석 Agent</div>
+        <div class="brand-sub">국내영업기획팀 · 김영우 책임</div>
+      </div>
+    </div>
+    <div class="step-indicator">
+      <a class="step current" href="f1-file-upload.html" title="1. 파일 업로드"><span class="step-dot">1</span><span>파일 업로드</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f2-data-mapping.html" title="2. 정제·매핑"><span class="step-dot">2</span><span>정제·매핑</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f3-anomaly-detection.html" title="3. 증감률·이상징후 계산"><span class="step-dot">3</span><span>이상징후 계산</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f4-overview.html" title="4. Overview"><span class="step-dot">4</span><span>Overview</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f5-anomaly-highlights.html" title="5. 이상징후 하이라이트"><span class="step-dot">5</span><span>하이라이트</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f6-threshold-settings.html" title="6. 임계치 설정"><span class="step-dot">6</span><span>임계치 설정</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f7-report-draft.html" title="7. 보고서 초안 자동 생성"><span class="step-dot">7</span><span>보고서 초안</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f8-report-review.html" title="8. 보고서 초안 검토·수정"><span class="step-dot">8</span><span>검토·수정</span></a>
+      <span class="step-sep"></span>
+      <a class="step" href="f9-download.html" title="9. 결과 다운로드"><span class="step-dot">9</span><span>다운로드</span></a>
+    </div>
+  </header>
+
+  <main class="page">
+
+    <h1 class="page-title">파일 업로드</h1>
+    <p class="page-sub">필요한 파일을 개수 제한 없이 업로드하세요. 실적 파일은 필수, 그 외 파일은 선택입니다.</p>
+
+    <!-- 실적 통합 파일 (필수) -->
+    <section class="card">
+      <div class="card-header">
+        <div class="card-title">SAP 실적 통합 파일<span class="required-badge">필수</span></div>
+      </div>
+      <p class="card-desc">SAP ERP에서 다운로드한 지사·제품코드별 실적 데이터 파일입니다.</p>
+
+      <div class="dropzone">
+        <div class="dropzone-icon">＋</div>
+        파일을 여기로 끌어다 놓거나 <span class="dropzone-link">파일 선택</span>
+        <div class="dropzone-hint">지원 형식: .xlsx, .xls, .csv</div>
+      </div>
+
+      <div class="file-row">
+        <div class="file-icon">XLS</div>
+        <div class="file-meta">
+          <div class="file-name">2026년_08월_실적_통합.xlsx</div>
+          <div class="file-sub">2.4MB · 대상 기간 2026-08 · 자동 인식: 실적 파일</div>
+        </div>
+        <span class="status-chip status-ok">검증 완료</span>
+        <button class="btn-ghost-sm">삭제</button>
+      </div>
+    </section>
+
+    <!-- 판매계획 파일 (선택) -->
+    <section class="card">
+      <div class="card-header">
+        <div class="card-title">연간 판매계획 파일<span class="optional-badge">선택</span></div>
+      </div>
+      <p class="card-desc">팀별·제품군별 연간 판매계획 데이터입니다. 업로드 시 계획 대비 달성률이 함께 계산됩니다.</p>
+
+      <div class="dropzone">
+        <div class="dropzone-icon">＋</div>
+        파일을 여기로 끌어다 놓거나 <span class="dropzone-link">파일 선택</span>
+        <div class="dropzone-hint">지원 형식: .xlsx, .xls, .csv</div>
+      </div>
+
+      <div class="file-row">
+        <div class="file-icon">XLS</div>
+        <div class="file-meta">
+          <div class="file-name">2026년_판매계획_연간.xlsx</div>
+          <div class="file-sub">1.1MB · 대상 기간 2026-01~12 · 자동 인식: 판매계획 파일</div>
+        </div>
+        <span class="status-chip status-ok">검증 완료</span>
+        <button class="btn-ghost-sm">삭제</button>
+      </div>
+    </section>
+
+    <!-- 팀별 손익계산서 (선택) -->
+    <section class="card">
+      <div class="card-header">
+        <div class="card-title">팀별 손익계산서<span class="optional-badge">선택</span></div>
+      </div>
+      <p class="card-desc">팀 단위 손익 데이터입니다. 업로드 시 팀 단위 손익 관점의 분석이 추가로 제공됩니다.</p>
+
+      <div class="dropzone">
+        <div class="dropzone-icon">＋</div>
+        파일을 여기로 끌어다 놓거나 <span class="dropzone-link">파일 선택</span>
+        <div class="dropzone-hint">지원 형식: .xlsx, .xls, .csv</div>
+      </div>
+
+      <div class="file-row">
+        <div class="file-icon warn">XLS</div>
+        <div class="file-meta">
+          <div class="file-name">2026_08_팀별손익계산서_v2.xlsx</div>
+          <div class="file-sub">0.8MB · 대상 기간 2026-07 · 자동 인식 불확실</div>
+        </div>
+        <select class="file-type-select">
+          <option>손익계산서로 지정</option>
+          <option>실적 파일로 지정</option>
+          <option>매핑표로 지정</option>
+        </select>
+        <span class="status-chip status-warn">종류 확인 필요</span>
+        <button class="btn-ghost-sm">삭제</button>
+      </div>
+
+      <div class="alert alert-warn">
+        <span class="alert-icon">!</span>
+        <span>이 파일의 대상 기간(2026-07)이 실적 파일(2026-08)과 다릅니다. 계속 진행하시겠습니까?</span>
+      </div>
+    </section>
+
+    <!-- 제품코드-제품군 매핑표 (선택) -->
+    <section class="card">
+      <div class="card-header">
+        <div class="card-title">제품코드-제품군 매핑표<span class="optional-badge">선택</span></div>
+      </div>
+      <p class="card-desc">업로드하지 않으면 이전에 저장된 매핑표를 그대로 사용합니다.</p>
+
+      <div class="dropzone">
+        <div class="dropzone-icon">＋</div>
+        파일을 여기로 끌어다 놓거나 <span class="dropzone-link">파일 선택</span>
+        <div class="dropzone-hint">지원 형식: .xlsx, .xls, .csv</div>
+      </div>
+    </section>
+
+    <div class="action-bar">
+      <span class="action-note">실적 파일 1건이 업로드되어 분석을 시작할 수 있습니다.</span>
+      <a href="f2-data-mapping.html" class="btn btn-primary">데이터 정제·분석 시작 →</a>
+    </div>
+
+  </main>
+
+</body>
+</html>
