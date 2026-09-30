@@ -40,3 +40,11 @@ Vercel 빌드 서버는 Linux(구분함)라, 로컬에서만 통과하는 문제
     https 페이지에서 http 백엔드 호출은 브라우저가 차단(mixed content)
   - 정책: PRD의 "김영우 책임 1인 전용"·"로컬 데모가 완료 기준"(NG6)·다중 사용자 권한 제외(NG1)와 충돌 — 로그인 없이
     인터넷에 공개되면 실적 데이터가 노출될 수 있음
+
+## 후속 수정 — Vercel 설치 단계 실패(ERESOLVE)
+
+- 증상: Vercel 첫 배포에서 `npm install`이 `ERESOLVE`로 실패. `@types/node@^20`(루트 devDependency)과
+  vitest 5의 peer 요구(`@types/node ^22.0.0 || >=24`)가 충돌했다. 로컬은 기존 `node_modules`를 써서 드러나지 않았다.
+- 수정: `@types/node`를 `^22.12.0` 이상(설치 결과 `^22.20.4`)으로 올림 — vite(`>=22.12.0`)·vitest 조건을 동시에 만족.
+  lock 파일에는 빠져 있던 `@testing-library/dom` 계열 peer 의존성이 함께 추가됨(다른 패키지 버전 변화 없음).
+- 확인: 빈 폴더에서 `npm install`(Vercel과 동일한 새 설치) + `next build` 성공, 원 프로젝트 lint·vitest 19개·build 통과.
