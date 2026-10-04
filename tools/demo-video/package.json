@@ -1,0 +1,9 @@
+{
+  "name": "demo-video",
+  "private": true,
+  "type": "module",
+  "description": "발표(시연) 영상 자동 녹화 도구 — .docs/phase/phase_27_발표영상제작.md 참고",
+  "dependencies": {
+    "playwright-core": "^1.55.0"
+  }
+}

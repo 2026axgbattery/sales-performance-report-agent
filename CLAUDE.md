@@ -107,6 +107,10 @@ node scripts/smoke-test.mjs
 - F9 다운로드 — 별도 다운로드 화면을 만들지 않고, `app/overview/page.tsx`·`app/anomalies/page.tsx`·`app/reports/page.tsx`에 각각 `lib/api.ts`의 `overviewExportUrl`/`anomaliesExportUrl`/`reportExportUrl`을 가리키는 `<a>` 링크를 두었다(브라우저가 `Content-Disposition: attachment` 응답 헤더로 다운로드를 처리하므로 fetch 기반 다운로드 코드가 필요 없다). **`components/OverviewPdfDownloadButton.tsx`(Phase 15)**만 예외적으로 단순 링크가 아니라 카테고리 체크박스 드롭다운이다 — 기본 전체 선택, 선택된 섹션 키를 `overviewExportUrl(batchId, sections)`의 `sections` 쿼리 파라미터로 담아 다운로드 링크를 만든다(아무것도 선택하지 않으면 "전체 포함"으로 오해되지 않도록 다운로드 링크 대신 안내 문구를 보여준다). `app/reports/page.tsx`에는 `reportRefinedExportUrl(draftId)`를 가리키는 "실적 Re-arrange 전체 다운로드(xlsx)" 링크를 기존 보고서 초안 다운로드 옆에 추가했다.
 - `scripts/smoke-test.mjs` — Node.js 네이티브 `fetch`/`FormData`로 브라우저와 동일한 인코딩 경로를 재현하는 E2E 스모크 테스트. **curl은 이 Windows/Git-Bash 환경에서 `-F` 커맨드라인 인자 값을 CP949로 인코딩해 한글 폼 필드(예: "실적")가 깨지는 문제가 있어(파일 내용은 정상, 인자값만 문제) 사용하지 않는다.** 백엔드가 `:8000`에서 떠 있는 상태로 실행한다.
 
+## 발표(시연) 영상 도구 (Phase 27)
+
+`tools/demo-video/`가 과정 제출용 시연 영상을 자동으로 만든다(.docs/phase/phase_27_발표영상제작.md — 재생성 절차 포함). Playwright(Edge)가 앱을 실제로 조작하며 녹화하고, Windows 내장 한국어 음성(Microsoft Heami)으로 나레이션을 만들어 `imageio-ffmpeg`의 ffmpeg로 합친다. 대본의 단일 출처는 `narration.json`이고 장면별 음성 길이에 맞춰 화면 동작이 진행된다. **영상에는 실데이터를 절대 쓰지 않는다** — 로컬 `backend/data/app.duckdb` 대신 `APP_DB_PATH`로 분리한 데모 백엔드(:8001)와 그 주소로 빌드한 프론트(:3100)를 쓰고, 끝나면 `frontend`를 기본 설정으로 다시 빌드해 `.next`를 되돌린다. 영상에서 직접 올리는 8월 파일은 단일 월 경로를 타도록 분리했다(여러 달을 한 번에 올리면 계획이 집계 뒤에 저장돼 목표가 비는 알려진 문제 때문). 결과물(`video/`)과 PPT는 용량·개인 제출물이라 `.gitignore`로 제외한다.
+
 ## 문서 구조와 읽는 순서
 
 - [01_과제개발기획서_v2.md](01_과제개발기획서_v2.md) — 원본 입력 문서. 과제 선정 이유, As-Is 업무 방식·투입 시간, 기대효과, 예상 작업 흐름(①~⑧ 단계)이 정의되어 있다. **이 파일은 PRD 작성의 근거 자료이므로 임의로 수정하지 않는다.**

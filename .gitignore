@@ -52,3 +52,10 @@ Thumbs.db
 
 # ── Claude Code 세션 런타임 상태 ────────────────────────────────────────────
 .claude/scheduled_tasks.lock
+
+# ── 발표 영상·제출 문서(용량이 크거나 개인 제출물) — 로컬 보관만 (Phase 27) ─────────────
+video/
+*.mp4
+*.webm
+*.wav
+*.pptx
