@@ -109,7 +109,7 @@ node scripts/smoke-test.mjs
 
 ## 발표(시연) 영상 도구 (Phase 27)
 
-`tools/demo-video/`가 과정 제출용 시연 영상을 자동으로 만든다(.docs/phase/phase_27_발표영상제작.md — 재생성 절차 포함). Playwright(Edge)가 앱을 실제로 조작하며 녹화하고, Windows 내장 한국어 음성(Microsoft Heami)으로 나레이션을 만들어 `imageio-ffmpeg`의 ffmpeg로 합친다. 대본의 단일 출처는 `narration.json`이고 장면별 음성 길이에 맞춰 화면 동작이 진행된다. **영상에는 실데이터를 절대 쓰지 않는다** — 로컬 `backend/data/app.duckdb` 대신 `APP_DB_PATH`로 분리한 데모 백엔드(:8001)와 그 주소로 빌드한 프론트(:3100)를 쓰고, 끝나면 `frontend`를 기본 설정으로 다시 빌드해 `.next`를 되돌린다. 영상에서 직접 올리는 8월 파일은 단일 월 경로를 타도록 분리했다(여러 달을 한 번에 올리면 계획이 집계 뒤에 저장돼 목표가 비는 알려진 문제 때문). 결과물(`video/`)과 PPT는 용량·개인 제출물이라 `.gitignore`로 제외한다.
+`tools/demo-video/`가 과정 제출용 시연 영상을 자동으로 만든다(.docs/phase/phase_27_발표영상제작.md — 재생성 절차 포함). Playwright(Edge)가 앱을 실제로 조작하며 녹화하고, Windows 내장 한국어 음성(Microsoft Heami)으로 나레이션을 만들어 `imageio-ffmpeg`의 ffmpeg로 합친다. 대본의 단일 출처는 `narration.json`이고(음성용 `text`와 자막용 `subtitle`을 구분 — 숫자 표기가 다르다) 장면별 음성 길이에 맞춰 화면 동작이 진행된다. `record.mjs --subs script` + `build_video.py --silent`는 대본 전문을 자막으로 넣은 무음 버전을 만든다. **영상에는 실데이터를 절대 쓰지 않는다** — 로컬 `backend/data/app.duckdb` 대신 `APP_DB_PATH`로 분리한 데모 백엔드(:8001)와 그 주소로 빌드한 프론트(:3100)를 쓰고, 끝나면 `frontend`를 기본 설정으로 다시 빌드해 `.next`를 되돌린다. 영상에서 직접 올리는 8월 파일은 단일 월 경로를 타도록 분리했다(여러 달을 한 번에 올리면 계획이 집계 뒤에 저장돼 목표가 비는 알려진 문제 때문). 결과물(`video/`)과 PPT는 용량·개인 제출물이라 `.gitignore`로 제외한다.
 
 ## 문서 구조와 읽는 순서
 

@@ -45,21 +45,25 @@ def main() -> None:
     ap.add_argument("--work", required=True, type=Path)
     ap.add_argument("--audio", required=True, type=Path)
     ap.add_argument("--out", required=True, type=Path)
+    ap.add_argument("--silent", action="store_true", help="오디오 트랙 없이 영상만 만든다(무음 자막판)")
     args = ap.parse_args()
 
     timeline = json.loads((args.work / "timeline.json").read_text(encoding="utf-8"))
     trim_s = max(0.0, timeline["scenes"][0]["startMs"] / 1000 - LEAD_IN_S)
     narration_wav = args.work / "narration.wav"
-    total_s = build_audio(timeline, args.audio, trim_s, narration_wav)
+    if args.silent:
+        total_s = timeline["endMs"] / 1000 - trim_s
+    else:
+        total_s = build_audio(timeline, args.audio, trim_s, narration_wav)
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     cmd = [
         imageio_ffmpeg.get_ffmpeg_exe(), "-y",
         "-ss", f"{trim_s:.3f}", "-i", timeline["video"],
-        "-i", str(narration_wav),
+        *([] if args.silent else ["-i", str(narration_wav)]),
         "-t", f"{total_s:.3f}",
         "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p", "-r", "30",
-        "-c:a", "aac", "-b:a", "160k",
+        *(["-an"] if args.silent else ["-c:a", "aac", "-b:a", "160k"]),
         "-movflags", "+faststart",
         str(args.out),
     ]

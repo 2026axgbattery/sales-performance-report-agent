@@ -12,6 +12,8 @@ const OUT = argv.out;
 const AUDIO = argv.audio;
 const LIVE_FILE = argv.live;
 const BASE = argv.base ?? "http://localhost:3100";
+// --subs script: 하단 자막에 요약 대신 나레이션 대본 전문을 문장 단위로 표시(무음 영상용)
+const SUBS = argv.subs ?? "short";
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const narration = JSON.parse(fs.readFileSync(path.join(HERE, "narration.json"), "utf8"));
 const PAD_MS = 400;
@@ -88,7 +90,7 @@ const OVERLAY_INIT = `(() => {
       #__cur{position:fixed;left:0;top:0;z-index:2147483647;pointer-events:none;width:30px;height:30px;will-change:transform;display:none}
       .__rip{position:fixed;z-index:2147483646;pointer-events:none;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:3px solid #eb3300;animation:__rip .6s ease-out forwards}
       @keyframes __rip{from{transform:scale(.4);opacity:.95}to{transform:scale(4.2);opacity:0}}
-      #__cap{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483644;width:max-content;max-width:1100px;padding:12px 28px;border-radius:12px;
+      #__cap{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483646;width:max-content;max-width:1200px;padding:12px 28px;border-radius:12px;
         background:rgba(36,44,50,.94);color:#fff;font:700 23px/1.45 'Malgun Gothic',sans-serif;text-align:center;border-left:7px solid #eb3300;
         box-shadow:0 6px 24px rgba(0,0,0,.35);display:none}\`;
     root.appendChild(css);
@@ -164,17 +166,69 @@ async function scrollToLocator(locator, offset = 90, ms = 1100) {
   await scrollTo(Math.max(0, top), ms);
 }
 
+
+// ── 대본 자막(무음 영상용): 문장 단위로 나누고 글자 수 비율로 장면 음성 길이에 맞춰 순서대로 표시 ──
+function splitBySpace(text, maxLen) {
+  const words = text.split(" ");
+  const total = text.length;
+  const parts = Math.ceil(total / maxLen);
+  const target = Math.ceil(total / parts);
+  const out = [];
+  let buf = "";
+  for (const w of words) {
+    if (buf && (buf + " " + w).length > target) { out.push(buf); buf = w; } else buf = buf ? buf + " " + w : w;
+  }
+  if (buf) out.push(buf);
+  return out;
+}
+function toChunks(text, maxLen = 40) {
+  const sentences = (text.match(/[^.?!]+[.?!]?/g) ?? [text]).map((s) => s.trim()).filter(Boolean);
+  const out = [];
+  for (const s of sentences) {
+    if (s.length <= maxLen) { out.push(s); continue; }
+    let buf = "";
+    for (const piece of s.split(/(?<=,)\s*/)) {
+      if (buf && (buf + " " + piece).length > maxLen) { out.push(buf); buf = piece; } else buf = buf ? buf + " " + piece : piece;
+    }
+    if (buf) out.push(buf);
+  }
+  return out.flatMap((c) => (c.length <= maxLen + 6 ? [c] : splitBySpace(c, maxLen)));
+}
+async function setCaptionSafe(text) {
+  for (let k = 0; k < 3; k++) {
+    try { await page.evaluate((t) => window.__setCaption(t), text); return; } catch { await sleep(150); }
+  }
+}
+function scheduleSubs(text, durMs) {
+  const chunks = toChunks(text);
+  const weights = chunks.map((c) => c.replace(/\s/g, "").length);
+  const sum = weights.reduce((a, b) => a + b, 0);
+  let acc = 0;
+  const plan = chunks.map((c, i) => { const at = (acc / sum) * durMs * 0.97; acc += weights[i]; return { c, at }; });
+  const t = Date.now();
+  return (async () => {
+    for (const { c, at } of plan) {
+      const wait = t + at - Date.now();
+      if (wait > 0) await sleep(wait);
+      await setCaptionSafe(c);
+    }
+  })();
+}
+
 const timeline = { scenes: [] };
 async function scene(i, body, { caption = true } = {}) {
   const s = narration.scenes[i];
   const dur = wavSeconds(path.join(AUDIO, `${s.id}.wav`)) * 1000;
   const start = Date.now();
   timeline.scenes.push({ id: s.id, startMs: start - t0, audioMs: dur });
-  await page.evaluate((t) => window.__setCaption(t), caption ? s.caption : "");
+  let subsTask = Promise.resolve();
+  if (SUBS === "script") subsTask = scheduleSubs(s.subtitle ?? s.text, dur);
+  else await page.evaluate((t) => window.__setCaption(t), caption ? s.caption : "");
   await body();
   const remain = start + dur + PAD_MS - Date.now();
   if (remain > 0) await sleep(remain);
   else console.log(`  (경고) ${s.id} 동작이 나레이션보다 ${(-remain / 1000).toFixed(1)}초 길었음`);
+  await subsTask;
   console.log(`${s.id} ${s.title}: ${((Date.now() - start) / 1000).toFixed(1)}초 (음성 ${(dur / 1000).toFixed(1)}초)`);
 }
 
